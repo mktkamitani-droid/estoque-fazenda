@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Produto = {
   id: number;
@@ -31,6 +32,12 @@ export default function Home() {
 
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
+  const router = useRouter();
+
+  async function sair() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+  }
 
   async function carregarProdutos() {
     const r = await fetch("/api/produtos");
@@ -115,12 +122,20 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-green-700 text-white px-4 py-4 shadow">
-        <div className="max-w-3xl mx-auto flex items-center gap-3">
-          <span className="text-2xl">🌾</span>
-          <div>
-            <h1 className="text-xl font-bold leading-tight">Kamitani Agro</h1>
-            <p className="text-green-200 text-xs">Controle de estoque</p>
+        <div className="max-w-3xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🌾</span>
+            <div>
+              <h1 className="text-xl font-bold leading-tight">Kamitani Agro</h1>
+              <p className="text-green-200 text-xs">Controle de estoque</p>
+            </div>
           </div>
+          <button
+            onClick={sair}
+            className="text-green-200 hover:text-white text-xs underline"
+          >
+            Sair
+          </button>
         </div>
       </header>
 
