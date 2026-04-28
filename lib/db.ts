@@ -1,12 +1,19 @@
-import { neon } from "@neondatabase/serverless";
+import { neon, NeonQueryFunction } from "@neondatabase/serverless";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL não configurada");
+let _sql: NeonQueryFunction<false, false> | null = null;
+
+function getSql() {
+  if (!_sql) {
+    if (!process.env.DATABASE_URL) {
+      throw new Error("DATABASE_URL não configurada");
+    }
+    _sql = neon(process.env.DATABASE_URL);
+  }
+  return _sql;
 }
 
-const sql = neon(process.env.DATABASE_URL);
-
 export async function initDb() {
+  const sql = getSql();
   await sql`
     CREATE TABLE IF NOT EXISTS produtos (
       id SERIAL PRIMARY KEY,
@@ -29,4 +36,9 @@ export async function initDb() {
   `;
 }
 
-export default sql;
+export default function sql(
+  strings: TemplateStringsArray,
+  ...values: any[]
+) {
+  return getSql()(strings, ...values);
+}
