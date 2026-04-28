@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Produto {
+  id            Int             @id @default(autoincrement())
+  nome          String
+  unidade       String
+  quantidade    Float           @default(0)
+  categoria     String          @default("Geral")
+  criadoEm      DateTime        @default(now())
+  movimentacoes Movimentacao[]
+}
+
+model Movimentacao {
+  id          Int      @id @default(autoincrement())
+  produtoId   Int
+  tipo        String   // ENTRADA ou SAIDA
+  quantidade  Float
+  observacao  String   @default("")
+  criadoEm   DateTime @default(now())
+  produto     Produto  @relation(fields: [produtoId], references: [id])
+}
