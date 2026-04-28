@@ -118,8 +118,8 @@ export default function Home() {
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <span className="text-2xl">🌾</span>
           <div>
-            <h1 className="text-xl font-bold leading-tight">Estoque Fazenda</h1>
-            <p className="text-green-200 text-xs">Controle simples e eficiente</p>
+            <h1 className="text-xl font-bold leading-tight">Kamitani Agro</h1>
+            <p className="text-green-200 text-xs">Controle de estoque</p>
           </div>
         </div>
       </header>

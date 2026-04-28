@@ -5,8 +5,8 @@ import "./globals.css";
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Estoque Fazenda",
-  description: "Controle de estoque para fazenda",
+  title: "Kamitani Agro",
+  description: "Controle de estoque - Kamitani Agro",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
