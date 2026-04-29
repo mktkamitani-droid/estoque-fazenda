@@ -37,6 +37,17 @@ export async function initDb() {
     )
   `;
   await sql`ALTER TABLE movimentacoes ADD COLUMN IF NOT EXISTS responsavel TEXT NOT NULL DEFAULT ''`;
+  await sql`
+    CREATE TABLE IF NOT EXISTS fazendas (
+      id SERIAL PRIMARY KEY,
+      nome TEXT NOT NULL UNIQUE,
+      criado_em TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`
+    INSERT INTO fazendas (nome) VALUES ('Dom'), ('Tinguara'), ('Santa Rosa'), ('Santa Rita'), ('Copasul')
+    ON CONFLICT (nome) DO NOTHING
+  `;
 }
 
 export default function sql(

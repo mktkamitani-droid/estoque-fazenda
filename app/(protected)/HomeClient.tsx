@@ -22,6 +22,13 @@ type Produto = {
   categoria: string;
 };
 
+type Fazenda = {
+  id: number;
+  nome: string;
+  total_produtos: number;
+  sem_estoque: number;
+};
+
 type Movimentacao = {
   id: number;
   tipo: string;
@@ -32,7 +39,6 @@ type Movimentacao = {
   produto: { nome: string; unidade: string };
 };
 
-const FAZENDAS = ["Dom", "Tinguara", "Santa Rosa", "Santa Rita", "Copasul"];
 const ORDEM_CATEGORIAS = ["Grãos", "Semente", "Ração", "Adubo", "Inseticida", "Herbicida", "Fungicida", "Medicamentos", "Diesel", "Peças", "Geral"];
 const CATEGORIAS_COM_BULA = ["Inseticida", "Herbicida", "Fungicida", "Medicamentos"];
 
@@ -44,14 +50,15 @@ const iStyle = {
 
 export default function Home() {
   const [aba, setAba] = useState<"estoque" | "historico">("estoque");
-  const [fazenda, setFazenda] = useState(FAZENDAS[0]);
+  const [fazendas, setFazendas] = useState<Fazenda[]>([]);
+  const [fazenda, setFazenda] = useState("");
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);
 
   const [modalNovo, setModalNovo] = useState(false);
   const [modalMov, setModalMov] = useState<Produto | null>(null);
 
-  const [novoProduto, setNovoProduto] = useState({ nome: "", unidade: "kg", categoria: "Geral", fazenda: FAZENDAS[0], quantidadeInicial: "" });
+  const [novoProduto, setNovoProduto] = useState({ nome: "", unidade: "kg", categoria: "Geral", fazenda: "", quantidadeInicial: "" });
   const [novaMov, setNovaMov] = useState({ tipo: "ENTRADA", quantidade: "", observacao: "", responsavel: "" });
   const [nomeResponsavel, setNomeResponsavel] = useState("");
 
@@ -67,8 +74,12 @@ export default function Home() {
   }
 
   async function carregarProdutos(faz = fazenda) {
-    const r = await fetch(`/api/produtos?fazenda=${encodeURIComponent(faz)}`);
-    setProdutos(await r.json());
+    const [rp, rf] = await Promise.all([
+      fetch(`/api/produtos?fazenda=${encodeURIComponent(faz)}`),
+      fetch("/api/fazendas"),
+    ]);
+    setProdutos(await rp.json());
+    setFazendas(await rf.json());
   }
 
   async function carregarHistorico() {
@@ -77,15 +88,27 @@ export default function Home() {
   }
 
   useEffect(() => {
-    carregarProdutos(fazenda);
-    carregarHistorico();
-  }, [fazenda]);
+    async function init() {
+      const nome = localStorage.getItem("kamitani_responsavel") || "";
+      setNomeResponsavel(nome);
+      setNovaMov(m => ({ ...m, responsavel: nome }));
+      const r = await fetch("/api/fazendas");
+      const lista: Fazenda[] = await r.json();
+      setFazendas(lista);
+      if (lista.length > 0) {
+        setFazenda(lista[0].nome);
+        setNovoProduto(p => ({ ...p, fazenda: lista[0].nome }));
+      }
+    }
+    init();
+  }, []);
 
   useEffect(() => {
-    const nome = localStorage.getItem("kamitani_responsavel") || "";
-    setNomeResponsavel(nome);
-    setNovaMov(m => ({ ...m, responsavel: nome }));
-  }, []);
+    if (fazenda) {
+      carregarProdutos(fazenda);
+      carregarHistorico();
+    }
+  }, [fazenda]);
 
   async function criarProduto(e: React.FormEvent) {
     e.preventDefault();
@@ -178,20 +201,29 @@ export default function Home() {
       {/* Seletor de fazendas */}
       <div className="max-w-3xl mx-auto px-4 pt-4">
         <div className="flex gap-2 overflow-x-auto pb-1">
-          {FAZENDAS.map(f => (
-            <button
-              key={f}
-              onClick={() => setFazenda(f)}
-              className="whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors shrink-0"
-              style={{
-                background: fazenda === f ? GREEN : CARD,
-                color: fazenda === f ? "#0d1117" : MUTED,
-                border: `1px solid ${fazenda === f ? GREEN : BORDER}`,
-              }}
-            >
-              {f}
-            </button>
-          ))}
+          {fazendas.map(f => {
+            const ativa = fazenda === f.nome;
+            return (
+              <button
+                key={f.id}
+                onClick={() => setFazenda(f.nome)}
+                className="flex flex-col items-start shrink-0 rounded-xl px-3 py-2 transition-all"
+                style={{
+                  background: ativa ? GREEN_DIM : CARD,
+                  border: `1px solid ${ativa ? GREEN : BORDER}`,
+                  minWidth: 90,
+                }}
+              >
+                <span className="text-xs font-bold whitespace-nowrap" style={{ color: ativa ? GREEN : TEXT }}>{f.nome}</span>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs" style={{ color: MUTED }}>{f.total_produtos} prod.</span>
+                  {f.sem_estoque > 0 && (
+                    <span className="text-xs font-semibold" style={{ color: AMBER }}>⚠ {f.sem_estoque}</span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -392,7 +424,7 @@ export default function Home() {
                 <label className="block text-xs font-medium mb-1" style={{ color: MUTED }}>Fazenda</label>
                 <select className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none" style={iStyle}
                   value={novoProduto.fazenda} onChange={(e) => setNovoProduto({ ...novoProduto, fazenda: e.target.value })}>
-                  {FAZENDAS.map(f => <option key={f}>{f}</option>)}
+                  {fazendas.map(f => <option key={f.id}>{f.nome}</option>)}
                 </select>
               </div>
               <div>
