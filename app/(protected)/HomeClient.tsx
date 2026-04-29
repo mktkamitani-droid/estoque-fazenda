@@ -83,9 +83,21 @@ function initials(nome: string) {
 const UNIDADES = ["kg","ton","L","sc","un","cx"];
 const CATEGORIAS = ["Grãos","Semente","Ração","Adubo","Inseticida","Herbicida","Fungicida","Medicamentos","Diesel","Peças","Geral"];
 
+const BASE_NAV: { id: Aba; label: string; icon: string }[] = [
+  { id: "dashboard",  label: "Início",    icon: "◈" },
+  { id: "estoque",    label: "Estoque",   icon: "▤" },
+  { id: "historico",  label: "Histórico", icon: "↕" },
+  { id: "colheitas",  label: "Colheitas", icon: "🌾" },
+];
+const ABA_LABEL: Record<string, string> = {
+  dashboard: "Kamitani Agro", estoque: "Estoque",
+  historico: "Histórico", colheitas: "Colheitas", usuarios: "Usuários",
+};
+
 export default function Home() {
   const [aba, setAba] = useState<Aba>("dashboard");
   const [dashData, setDashData] = useState<DashFazenda[]>([]);
+  const [dashLoading, setDashLoading] = useState(true);
   const [fazendas, setFazendas]   = useState<Fazenda[]>([]);
   const [fazenda, setFazenda]     = useState("");
   const [produtos, setProdutos]   = useState<Produto[]>([]);
@@ -125,11 +137,16 @@ export default function Home() {
     setProdutos(await rp.json());
     setFazendas(await rf.json());
   }
-  async function loadMovs()     { const r = await fetch("/api/movimentacoes"); setMovs(await r.json()); }
+  async function loadMovs(faz = fazenda) {
+    const r = await fetch(`/api/movimentacoes?fazenda=${encodeURIComponent(faz)}`);
+    setMovs(await r.json());
+  }
   async function loadUsuarios() { const r = await fetch("/api/usuarios"); if (r.ok) setUsuarios(await r.json()); }
   async function loadDashboard() {
+    setDashLoading(true);
     const r = await fetch("/api/dashboard");
     if (r.ok) setDashData(await r.json());
+    setDashLoading(false);
   }
   async function loadColheitas(faz?: string) {
     const url = faz ? `/api/colheitas?fazenda=${encodeURIComponent(faz)}` : "/api/colheitas";
@@ -158,7 +175,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (fazenda) { loadProdutos(fazenda); loadMovs(); }
+    if (fazenda) { loadProdutos(fazenda); loadMovs(fazenda); }
   }, [fazenda]);
 
   async function sair() {
@@ -256,27 +273,15 @@ export default function Home() {
   const outrosCats   = [...new Set(filtrados.map(p => p.categoria))].filter(c => !ORDEM_CATEGORIAS.includes(c)).sort();
   const todasCats    = [...cats, ...outrosCats];
 
-  const navItems: { id: Aba; label: string; icon: string }[] = [
-    { id: "dashboard",  label: "Início",    icon: "◈" },
-    { id: "estoque",    label: "Estoque",   icon: "▤" },
-    { id: "historico",  label: "Histórico", icon: "↕" },
-    { id: "colheitas",  label: "Colheitas", icon: "🌾" },
-    ...(isAdmin ? [{ id: "usuarios" as Aba, label: "Usuários", icon: "◍" }] : []),
-  ];
+  const navItems = isAdmin
+    ? [...BASE_NAV, { id: "usuarios" as Aba, label: "Usuários", icon: "◍" }]
+    : BASE_NAV;
 
   function mudarAba(id: Aba) {
     setAba(id);
     if (id === "colheitas") loadColheitas(filtroCol || undefined);
     if (id === "usuarios")  loadUsuarios();
   }
-
-  const abaLabel: Record<Aba, string> = {
-    dashboard: "Kamitani Agro",
-    estoque: "Estoque",
-    historico: "Histórico",
-    colheitas: "Colheitas",
-    usuarios: "Usuários",
-  };
 
   return (
     <div style={{ minHeight:"100dvh", background: BG, color: TEXT, fontFamily:"system-ui,-apple-system,sans-serif", display:"flex", flexDirection:"column" }}>
@@ -295,7 +300,7 @@ export default function Home() {
             display:"flex", alignItems:"center", justifyContent:"center",
             fontWeight:800, fontSize:11, color:"#050A05",
           }}>KA</div>
-          <span style={{ fontSize:14, fontWeight:600, color: TEXT }}>{abaLabel[aba]}</span>
+          <span style={{ fontSize:14, fontWeight:600, color: TEXT }}>{ABA_LABEL[aba]}</span>
         </div>
 
         <div style={{ display:"flex", gap:8, alignItems:"center" }}>
@@ -365,10 +370,16 @@ export default function Home() {
               {new Date().toLocaleDateString("pt-BR", { weekday:"long", day:"2-digit", month:"long", year:"numeric" })}
             </p>
 
-            {dashData.length === 0 && (
+            {dashLoading && (
               <div style={{ textAlign:"center", padding:"60px 0", color: MUTED }}>
                 <div style={{ fontSize:36, marginBottom:8 }}>◈</div>
                 <p style={{ fontSize:14 }}>Carregando dados...</p>
+              </div>
+            )}
+            {!dashLoading && dashData.length === 0 && (
+              <div style={{ textAlign:"center", padding:"60px 0", color: MUTED }}>
+                <div style={{ fontSize:36, marginBottom:8 }}>🌱</div>
+                <p style={{ fontSize:14 }}>Nenhuma fazenda com produtos ainda.</p>
               </div>
             )}
 
@@ -474,27 +485,7 @@ export default function Home() {
         {/* ── ESTOQUE ───────────────────────────────────────── */}
         {aba === "estoque" && (
           <div>
-            {/* Farm selector */}
-            <div style={{ display:"flex", gap:6, overflowX:"auto", marginBottom:14, paddingBottom:2, scrollbarWidth:"none" }}>
-              {fazendas.map(f => {
-                const ativa = fazenda === f.nome;
-                return (
-                  <button key={f.id} onClick={() => setFazenda(f.nome)} style={{
-                    padding:"6px 14px", borderRadius:99, fontSize:12, fontWeight:600,
-                    whiteSpace:"nowrap", cursor:"pointer", flexShrink:0,
-                    background: ativa ? G_DIM : "transparent",
-                    color: ativa ? GREEN : MUTED,
-                    border:`1px solid ${ativa ? LINE3 : LINE2}`,
-                    transition:"all .15s",
-                  }}>
-                    {f.nome}
-                    {f.sem_estoque > 0 && (
-                      <span style={{ color: GOLD, marginLeft:5, fontSize:10 }}>⚠{f.sem_estoque}</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+            <FarmChips fazendas={fazendas} ativa={fazenda} onSelect={setFazenda} showBadge />
 
             {/* Stats */}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:14 }}>
@@ -602,24 +593,7 @@ export default function Home() {
         {/* ── HISTÓRICO ─────────────────────────────────────── */}
         {aba === "historico" && (
           <div>
-            {/* Farm selector */}
-            <div style={{ display:"flex", gap:6, overflowX:"auto", marginBottom:14, paddingBottom:2, scrollbarWidth:"none" }}>
-              {fazendas.map(f => {
-                const ativa = fazenda === f.nome;
-                return (
-                  <button key={f.id} onClick={() => setFazenda(f.nome)} style={{
-                    padding:"6px 14px", borderRadius:99, fontSize:12, fontWeight:600,
-                    whiteSpace:"nowrap", cursor:"pointer", flexShrink:0,
-                    background: ativa ? G_DIM : "transparent",
-                    color: ativa ? GREEN : MUTED,
-                    border:`1px solid ${ativa ? LINE3 : LINE2}`,
-                    transition:"all .15s",
-                  }}>
-                    {f.nome}
-                  </button>
-                );
-              })}
-            </div>
+            <FarmChips fazendas={fazendas} ativa={fazenda} onSelect={setFazenda} />
 
             <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
               {movs.length === 0 && (
@@ -669,25 +643,12 @@ export default function Home() {
         {/* ── COLHEITAS ─────────────────────────────────────── */}
         {aba === "colheitas" && (
           <div>
-            {/* Farm filter pills */}
-            <div style={{ display:"flex", gap:6, overflowX:"auto", marginBottom:14, paddingBottom:2, scrollbarWidth:"none" }}>
-              <button onClick={() => { setFiltroCol(""); loadColheitas(undefined); }} style={{
-                padding:"6px 14px", borderRadius:99, fontSize:12, fontWeight:600,
-                whiteSpace:"nowrap", cursor:"pointer", flexShrink:0,
-                background: !filtroCol ? G_DIM : "transparent",
-                color: !filtroCol ? GREEN : MUTED,
-                border:`1px solid ${!filtroCol ? LINE3 : LINE2}`,
-              }}>Todas</button>
-              {fazendas.map(f => (
-                <button key={f.id} onClick={() => { setFiltroCol(f.nome); loadColheitas(f.nome); }} style={{
-                  padding:"6px 14px", borderRadius:99, fontSize:12, fontWeight:600,
-                  whiteSpace:"nowrap", cursor:"pointer", flexShrink:0,
-                  background: filtroCol === f.nome ? G_DIM : "transparent",
-                  color: filtroCol === f.nome ? GREEN : MUTED,
-                  border:`1px solid ${filtroCol === f.nome ? LINE3 : LINE2}`,
-                }}>{f.nome}</button>
-              ))}
-            </div>
+            <FarmChips
+              fazendas={fazendas}
+              ativa={filtroCol}
+              onSelect={v => { setFiltroCol(v); loadColheitas(v || undefined); }}
+              allOption
+            />
 
             {colheitas.length === 0 && (
               <div style={{ textAlign:"center", padding:"48px 0", color: MUTED }}>
@@ -1000,7 +961,39 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
       <label style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", letterSpacing:"0.07em", color: MUTED }}>{label}</label>
-      <div style={{ display:"contents" }}>{children}</div>
+      {children}
+    </div>
+  );
+}
+
+function FarmChips({ fazendas, ativa, onSelect, showBadge = false, allOption = false }: {
+  fazendas: Fazenda[];
+  ativa: string;
+  onSelect: (nome: string) => void;
+  showBadge?: boolean;
+  allOption?: boolean;
+}) {
+  const chip = (isAtiva: boolean) => ({
+    padding:"6px 14px", borderRadius:99, fontSize:12, fontWeight:600,
+    whiteSpace:"nowrap" as const, cursor:"pointer", flexShrink:0,
+    background: isAtiva ? G_DIM : "transparent",
+    color: isAtiva ? GREEN : MUTED,
+    border:`1px solid ${isAtiva ? LINE3 : LINE2}`,
+    transition:"all .15s",
+  });
+  return (
+    <div style={{ display:"flex", gap:6, overflowX:"auto", marginBottom:14, paddingBottom:2, scrollbarWidth:"none" as const }}>
+      {allOption && (
+        <button onClick={() => onSelect("")} style={chip(!ativa)}>Todas</button>
+      )}
+      {fazendas.map(f => (
+        <button key={f.id} onClick={() => onSelect(f.nome)} style={chip(ativa === f.nome)}>
+          {f.nome}
+          {showBadge && f.sem_estoque > 0 && (
+            <span style={{ color: GOLD, marginLeft:5, fontSize:10 }}>⚠{f.sem_estoque}</span>
+          )}
+        </button>
+      ))}
     </div>
   );
 }

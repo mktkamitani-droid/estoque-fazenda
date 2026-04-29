@@ -1,15 +1,25 @@
 import sql from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const movs = await sql`
-      SELECT m.*, p.nome as produto_nome, p.unidade as produto_unidade
-      FROM movimentacoes m
-      JOIN produtos p ON p.id = m.produto_id
-      ORDER BY m.criado_em DESC
-      LIMIT 100
-    `;
+    const fazenda = req.nextUrl.searchParams.get("fazenda");
+    const movs = fazenda
+      ? await sql`
+          SELECT m.*, p.nome as produto_nome, p.unidade as produto_unidade
+          FROM movimentacoes m
+          JOIN produtos p ON p.id = m.produto_id
+          WHERE p.fazenda = ${fazenda}
+          ORDER BY m.criado_em DESC
+          LIMIT 100
+        `
+      : await sql`
+          SELECT m.*, p.nome as produto_nome, p.unidade as produto_unidade
+          FROM movimentacoes m
+          JOIN produtos p ON p.id = m.produto_id
+          ORDER BY m.criado_em DESC
+          LIMIT 100
+        `;
     const resultado = movs.map((m: any) => ({
       id: m.id,
       tipo: m.tipo,
