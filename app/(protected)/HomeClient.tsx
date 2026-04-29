@@ -31,7 +31,7 @@ type Movimentacao = {
 };
 
 const FAZENDAS = ["Dom", "Tinguara", "Santa Rosa", "Santa Rita", "Copasul"];
-const ORDEM_CATEGORIAS = ["Grãos", "Semente", "Ração", "Adubo", "Inseticida", "Herbicida", "Fungicida", "Medicamentos", "Diesel", "Geral"];
+const ORDEM_CATEGORIAS = ["Grãos", "Semente", "Ração", "Adubo", "Inseticida", "Herbicida", "Fungicida", "Medicamentos", "Diesel", "Peças", "Geral"];
 const CATEGORIAS_COM_BULA = ["Inseticida", "Herbicida", "Fungicida", "Medicamentos"];
 
 const iStyle = {
@@ -53,6 +53,7 @@ export default function Home() {
   const [novaMov, setNovaMov] = useState({ tipo: "ENTRADA", quantidade: "", observacao: "", responsavel: "" });
   const [nomeResponsavel, setNomeResponsavel] = useState("");
 
+  const [categoriasAbertas, setCategoriasAbertas] = useState<Record<string, boolean>>({});
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
   const router = useRouter();
@@ -242,16 +243,20 @@ export default function Home() {
               const prods = produtos
                 .filter(p => p.categoria === cat)
                 .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+              const aberta = categoriasAbertas[cat] !== false;
               return (
                 <div key={cat}>
-                  <div className="flex items-center gap-2 mb-1.5">
+                  <button
+                    onClick={() => setCategoriasAbertas(prev => ({ ...prev, [cat]: !aberta }))}
+                    className="w-full flex items-center gap-2 mb-1.5"
+                  >
                     <div className="h-px flex-1" style={{ background: BORDER }} />
                     <span className="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ color: GREEN, background: GREEN_DIM }}>
-                      {cat}
+                      {cat} <span style={{ color: MUTED }}>{aberta ? "▲" : "▼"}</span>
                     </span>
                     <div className="h-px flex-1" style={{ background: BORDER }} />
-                  </div>
-                  <div className="space-y-1">
+                  </button>
+                  {aberta && <div className="space-y-1">
                     {prods.map(p => (
                       <div key={p.id} className="rounded-lg px-3 py-2 flex items-center gap-2" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
                         <p className="font-medium text-sm flex-1 min-w-0 truncate" style={{ color: TEXT }}>{p.nome}</p>
@@ -281,7 +286,7 @@ export default function Home() {
                         </div>
                       </div>
                     ))}
-                  </div>
+                  </div>}
                 </div>
               );
             })}
@@ -366,6 +371,7 @@ export default function Home() {
                     <option>Fungicida</option>
                     <option>Medicamentos</option>
                     <option>Diesel</option>
+                    <option>Peças</option>
                     <option>Geral</option>
                   </select>
                 </div>
