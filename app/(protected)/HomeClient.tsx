@@ -31,6 +31,7 @@ type Movimentacao = {
 
 const FAZENDAS = ["Dom", "Tinguara", "Santa Rosa", "Santa Rita", "Copasul"];
 const ORDEM_CATEGORIAS = ["Grãos", "Ração", "Inseticida", "Herbicida", "Fungicida", "Medicamentos", "Geral"];
+const CATEGORIAS_COM_BULA = ["Inseticida", "Herbicida", "Fungicida", "Medicamentos"];
 
 const iStyle = {
   background: BG,
@@ -250,6 +251,18 @@ export default function Home() {
                           <span className="text-xs font-normal ml-1" style={{ color: MUTED }}>{p.unidade}</span>
                         </span>
                         <div className="flex gap-1 shrink-0">
+                          {CATEGORIAS_COM_BULA.includes(p.categoria) && (
+                            <a
+                              href={`https://www.google.com/search?q=${encodeURIComponent(p.nome + " bula")}&as_sitesearch=gov.br`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-2 py-1 rounded-md text-xs"
+                              style={{ background: "#1a2a3a", color: "#58a6ff" }}
+                              title="Ver bula"
+                            >
+                              📋
+                            </a>
+                          )}
                           <button onClick={() => { setModalMov(p); setNovaMov({ tipo: "ENTRADA", quantidade: "", observacao: "" }); }}
                             className="px-2 py-1 rounded-md text-xs font-bold" style={{ background: GREEN_DIM, color: GREEN }}>+</button>
                           <button onClick={() => { setModalMov(p); setNovaMov({ tipo: "SAIDA", quantidade: "", observacao: "" }); }}
