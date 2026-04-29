@@ -36,6 +36,7 @@ export async function initDb() {
       criado_em TIMESTAMP NOT NULL DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE movimentacoes ADD COLUMN IF NOT EXISTS responsavel TEXT NOT NULL DEFAULT ''`;
 }
 
 export default function sql(

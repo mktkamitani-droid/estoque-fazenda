@@ -25,6 +25,7 @@ type Movimentacao = {
   tipo: string;
   quantidade: number;
   observacao: string;
+  responsavel: string;
   criadoEm: string;
   produto: { nome: string; unidade: string };
 };
@@ -49,7 +50,8 @@ export default function Home() {
   const [modalMov, setModalMov] = useState<Produto | null>(null);
 
   const [novoProduto, setNovoProduto] = useState({ nome: "", unidade: "kg", categoria: "Geral", fazenda: FAZENDAS[0], quantidadeInicial: "" });
-  const [novaMov, setNovaMov] = useState({ tipo: "ENTRADA", quantidade: "", observacao: "" });
+  const [novaMov, setNovaMov] = useState({ tipo: "ENTRADA", quantidade: "", observacao: "", responsavel: "" });
+  const [nomeResponsavel, setNomeResponsavel] = useState("");
 
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
@@ -74,6 +76,12 @@ export default function Home() {
     carregarProdutos(fazenda);
     carregarHistorico();
   }, [fazenda]);
+
+  useEffect(() => {
+    const nome = localStorage.getItem("kamitani_responsavel") || "";
+    setNomeResponsavel(nome);
+    setNovaMov(m => ({ ...m, responsavel: nome }));
+  }, []);
 
   async function criarProduto(e: React.FormEvent) {
     e.preventDefault();
@@ -113,16 +121,17 @@ export default function Home() {
     if (!modalMov) return;
     setCarregando(true);
     setErro("");
+    if (nomeResponsavel) localStorage.setItem("kamitani_responsavel", nomeResponsavel);
     const r = await fetch("/api/movimentacoes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ produtoId: modalMov.id, ...novaMov }),
+      body: JSON.stringify({ produtoId: modalMov.id, ...novaMov, responsavel: nomeResponsavel }),
     });
     if (r.ok) {
       await carregarProdutos();
       await carregarHistorico();
       setModalMov(null);
-      setNovaMov({ tipo: "ENTRADA", quantidade: "", observacao: "" });
+      setNovaMov({ tipo: "ENTRADA", quantidade: "", observacao: "", responsavel: nomeResponsavel });
     } else {
       setErro("Erro ao registrar movimentação.");
     }
@@ -263,9 +272,9 @@ export default function Home() {
                               📋
                             </a>
                           )}
-                          <button onClick={() => { setModalMov(p); setNovaMov({ tipo: "ENTRADA", quantidade: "", observacao: "" }); }}
+                          <button onClick={() => { setModalMov(p); setNovaMov({ tipo: "ENTRADA", quantidade: "", observacao: "", responsavel: nomeResponsavel }); }}
                             className="px-2 py-1 rounded-md text-xs font-bold" style={{ background: GREEN_DIM, color: GREEN }}>+</button>
-                          <button onClick={() => { setModalMov(p); setNovaMov({ tipo: "SAIDA", quantidade: "", observacao: "" }); }}
+                          <button onClick={() => { setModalMov(p); setNovaMov({ tipo: "SAIDA", quantidade: "", observacao: "", responsavel: nomeResponsavel }); }}
                             className="px-2 py-1 rounded-md text-xs font-bold" style={{ background: RED_DIM, color: RED }}>−</button>
                           <button onClick={() => excluirProduto(p.id)}
                             className="px-2 py-1 rounded-md text-xs" style={{ background: BORDER, color: MUTED }}>✕</button>
@@ -293,14 +302,18 @@ export default function Home() {
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm truncate" style={{ color: TEXT }}>{m.produto.nome}</p>
-                  {m.observacao && <p className="text-xs truncate" style={{ color: MUTED }}>{m.observacao}</p>}
+                  <p className="text-xs truncate" style={{ color: MUTED }}>
+                    {m.responsavel && <span className="font-medium" style={{ color: "#58a6ff" }}>{m.responsavel}</span>}
+                    {m.responsavel && m.observacao && " · "}
+                    {m.observacao}
+                  </p>
                 </div>
                 <div className="text-right shrink-0">
                   <p className="font-bold text-sm" style={{ color: m.tipo === "ENTRADA" ? GREEN : RED }}>
                     {m.tipo === "ENTRADA" ? "+" : "−"}{m.quantidade} {m.produto.unidade}
                   </p>
                   <p className="text-xs" style={{ color: MUTED }}>
-                    {new Date(m.criadoEm).toLocaleDateString("pt-BR")}
+                    {new Date(m.criadoEm).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
               </div>
@@ -421,6 +434,16 @@ export default function Home() {
                   value={novaMov.quantidade}
                   onChange={(e) => setNovaMov({ ...novaMov, quantidade: e.target.value })}
                   required autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1" style={{ color: MUTED }}>Responsável</label>
+                <input
+                  className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none"
+                  style={iStyle}
+                  placeholder="Seu nome"
+                  value={nomeResponsavel}
+                  onChange={(e) => setNomeResponsavel(e.target.value)}
                 />
               </div>
               <div>

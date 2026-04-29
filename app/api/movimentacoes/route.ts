@@ -15,6 +15,7 @@ export async function GET() {
       tipo: m.tipo,
       quantidade: m.quantidade,
       observacao: m.observacao,
+      responsavel: m.responsavel,
       criadoEm: m.criado_em,
       produto: { nome: m.produto_nome, unidade: m.produto_unidade },
     }));
@@ -26,15 +27,15 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { produtoId, tipo, quantidade, observacao } = await req.json();
+    const { produtoId, tipo, quantidade, observacao, responsavel } = await req.json();
     if (!produtoId || !tipo || !quantidade) {
       return NextResponse.json({ error: "Dados incompletos" }, { status: 400 });
     }
     const delta = tipo === "ENTRADA" ? Number(quantidade) : -Number(quantidade);
 
     await sql`
-      INSERT INTO movimentacoes (produto_id, tipo, quantidade, observacao)
-      VALUES (${Number(produtoId)}, ${tipo}, ${Number(quantidade)}, ${observacao || ""})
+      INSERT INTO movimentacoes (produto_id, tipo, quantidade, observacao, responsavel)
+      VALUES (${Number(produtoId)}, ${tipo}, ${Number(quantidade)}, ${observacao || ""}, ${responsavel || ""})
     `;
     await sql`
       UPDATE produtos SET quantidade = quantidade + ${delta} WHERE id = ${Number(produtoId)}
