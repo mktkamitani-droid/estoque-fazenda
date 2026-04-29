@@ -40,7 +40,7 @@ const CATEGORIAS_COM_BULA = ["Inseticida","Herbicida","Fungicida","Medicamentos"
 
 const iStyle = { background: SURFACE, color: TEXT, border: `1px solid ${LINE2}` };
 
-type Aba = "dashboard" | "estoque" | "historico" | "colheitas" | "usuarios";
+type Aba = "dashboard" | "estoque" | "historico" | "colheitas" | "chuvas" | "usuarios";
 
 type DashFazenda = {
   nome: string;
@@ -68,6 +68,7 @@ type Colheita = {
   unidade: string; destino: string; placa: string; observacao: string; data: string;
 };
 type Usuario = { id: number; usuario: string; role: string; criado_em: string };
+type Chuva = { id: number; fazenda: string; mm: number; data: string; observacao: string; criado_em: string };
 
 function qtyColor(q: number) { return q < 0 ? RED : q === 0 ? GOLD : GREEN; }
 function fmtQty(q: number)   { return q % 1 === 0 ? String(q) : q.toFixed(2); }
@@ -86,12 +87,14 @@ const CATEGORIAS = ["Grãos","Semente","Ração","Adubo","Inseticida","Herbicida
 const BASE_NAV: { id: Aba; label: string; icon: string }[] = [
   { id: "dashboard",  label: "Início",    icon: "◈" },
   { id: "estoque",    label: "Estoque",   icon: "▤" },
-  { id: "historico",  label: "Histórico", icon: "↕" },
   { id: "colheitas",  label: "Colheitas", icon: "🌾" },
+  { id: "chuvas",     label: "Chuvas",    icon: "🌧️" },
+  { id: "historico",  label: "Histórico", icon: "↕" },
 ];
 const ABA_LABEL: Record<string, string> = {
   dashboard: "Kamitani Agro", estoque: "Estoque",
-  historico: "Histórico", colheitas: "Colheitas", usuarios: "Usuários",
+  historico: "Histórico", colheitas: "Colheitas",
+  chuvas: "Chuvas", usuarios: "Usuários",
 };
 
 export default function Home() {
@@ -103,11 +106,13 @@ export default function Home() {
   const [produtos, setProdutos]   = useState<Produto[]>([]);
   const [movs, setMovs]           = useState<Movimentacao[]>([]);
   const [colheitas, setColheitas] = useState<Colheita[]>([]);
+  const [chuvas, setChuvas]       = useState<Chuva[]>([]);
   const [usuarios, setUsuarios]   = useState<Usuario[]>([]);
   const [isAdmin, setIsAdmin]     = useState(false);
   const [busca, setBusca]         = useState("");
   const [catAberta, setCatAberta] = useState<Record<string, boolean>>({});
   const [filtroCol, setFiltroCol] = useState("");
+  const [filtroChu, setFiltroChu] = useState("");
   const [loading, setLoading]     = useState(false);
   const [erro, setErro]           = useState("");
   const [nomeResp, setNomeResp]   = useState("");
@@ -116,16 +121,19 @@ export default function Home() {
   const [modalMov,     setModalMov]     = useState<Produto | null>(null);
   const [modalEdit,    setModalEdit]    = useState<Produto | null>(null);
   const [modalCarga,   setModalCarga]   = useState(false);
+  const [modalChuva,   setModalChuva]   = useState(false);
   const [menuAberto,   setMenuAberto]   = useState(false);
 
   const novoProdutoDefault = { nome:"", unidade:"kg", categoria:"Geral", fazenda:"", quantidadeInicial:"", recomendacao:"" };
   const novaMovDefault     = { tipo:"ENTRADA", quantidade:"", observacao:"", responsavel:"" };
   const novaCargaDefault   = { fazenda:"", produto:"", quantidade:"", unidade:"sc", destino:"", placa:"", observacao:"", data: new Date().toISOString().slice(0,10) };
+  const novaChuvaDefault   = { fazenda:"", mm:"", data: new Date().toISOString().slice(0,10), observacao:"" };
 
   const [formProduto, setFormProduto] = useState(novoProdutoDefault);
   const [formMov,     setFormMov]     = useState(novaMovDefault);
   const [formEdit,    setFormEdit]    = useState({ nome:"", unidade:"kg", categoria:"Geral", fazenda:"", recomendacao:"" });
   const [formCarga,   setFormCarga]   = useState(novaCargaDefault);
+  const [formChuva,   setFormChuva]   = useState(novaChuvaDefault);
 
   const router = useRouter();
 
@@ -151,6 +159,10 @@ export default function Home() {
   async function loadColheitas(faz?: string) {
     const url = faz ? `/api/colheitas?fazenda=${encodeURIComponent(faz)}` : "/api/colheitas";
     const r = await fetch(url); setColheitas(await r.json());
+  }
+  async function loadChuvas(faz?: string) {
+    const url = faz ? `/api/chuvas?fazenda=${encodeURIComponent(faz)}` : "/api/chuvas";
+    const r = await fetch(url); if (r.ok) setChuvas(await r.json());
   }
 
   useEffect(() => {
@@ -260,6 +272,26 @@ export default function Home() {
     await loadColheitas(filtroCol || undefined);
   }
 
+  async function registrarChuva(e: React.FormEvent) {
+    e.preventDefault(); setLoading(true); setErro("");
+    const r = await fetch("/api/chuvas", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(formChuva),
+    });
+    if (r.ok) {
+      await loadChuvas(filtroChu || undefined);
+      setModalChuva(false);
+      setFormChuva({ ...novaChuvaDefault, fazenda: fazenda || "" });
+    } else { setErro("Erro ao registrar chuva."); }
+    setLoading(false);
+  }
+
+  async function excluirChuva(id: number) {
+    if (!confirm("Excluir este registro?")) return;
+    await fetch("/api/chuvas", { method:"DELETE", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ id }) });
+    await loadChuvas(filtroChu || undefined);
+  }
+
   async function excluirUsuario(id: number) {
     if (!confirm("Excluir este usuário?")) return;
     await fetch("/api/usuarios", { method:"DELETE", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ id }) });
@@ -280,6 +312,7 @@ export default function Home() {
   function mudarAba(id: Aba) {
     setAba(id);
     if (id === "colheitas") loadColheitas(filtroCol || undefined);
+    if (id === "chuvas")    loadChuvas(filtroChu || undefined);
     if (id === "usuarios")  loadUsuarios();
   }
 
@@ -294,12 +327,12 @@ export default function Home() {
         display:"flex", alignItems:"center", justifyContent:"space-between",
       }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <div style={{
+          <button onClick={() => mudarAba("dashboard")} style={{
             width:32, height:32, borderRadius:8, flexShrink:0,
             background:`linear-gradient(135deg, ${G_MID}, ${GREEN})`,
             display:"flex", alignItems:"center", justifyContent:"center",
-            fontWeight:800, fontSize:11, color:"#050A05",
-          }}>KA</div>
+            fontWeight:800, fontSize:11, color:"#050A05", border:"none", cursor:"pointer",
+          }}>KA</button>
           <span style={{ fontSize:14, fontWeight:600, color: TEXT }}>{ABA_LABEL[aba]}</span>
         </div>
 
@@ -317,6 +350,13 @@ export default function Home() {
               background: G_DIM, color: GREEN, border:`1px solid ${LINE3}`,
               cursor:"pointer",
             }}>+ Carga</button>
+          )}
+          {aba === "chuvas" && (
+            <button onClick={() => { setFormChuva({ ...novaChuvaDefault, fazenda: fazenda || "" }); setModalChuva(true); }} style={{
+              padding:"0 14px", height:32, borderRadius:8, fontSize:12, fontWeight:600,
+              background: G_DIM, color: GREEN, border:`1px solid ${LINE3}`,
+              cursor:"pointer",
+            }}>+ Chuva</button>
           )}
           {aba === "dashboard" && (
             <button onClick={loadDashboard} style={{
@@ -708,6 +748,75 @@ export default function Home() {
           </div>
         )}
 
+        {/* ── CHUVAS ────────────────────────────────────────── */}
+        {aba === "chuvas" && (
+          <div>
+            <FarmChips
+              fazendas={fazendas}
+              ativa={filtroChu}
+              onSelect={v => { setFiltroChu(v); loadChuvas(v || undefined); }}
+              allOption
+            />
+
+            {chuvas.length === 0 && (
+              <div style={{ textAlign:"center", padding:"48px 0", color: MUTED }}>
+                <div style={{ fontSize:36, marginBottom:8 }}>🌧️</div>
+                <p style={{ fontSize:14 }}>Nenhum registro de chuva.</p>
+              </div>
+            )}
+
+            {chuvas.length > 0 && (() => {
+              const totais: Record<string, number> = {};
+              chuvas.forEach(c => { totais[c.fazenda] = (totais[c.fazenda] || 0) + c.mm; });
+              return (
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))", gap:8, marginBottom:14 }}>
+                  {Object.entries(totais).map(([faz, total]) => (
+                    <div key={faz} style={{ background: SURFACE, border:`1px solid ${LINE2}`, borderRadius:10, padding:"10px 12px" }}>
+                      <p style={{ fontSize:10, textTransform:"uppercase", letterSpacing:"0.08em", color: MUTED }}>{faz}</p>
+                      <p style={{ fontSize:20, fontWeight:800, color: BLUE, marginTop:4, fontFamily:"ui-monospace,monospace" }}>
+                        {fmtQty(total)}<span style={{ fontSize:11, fontWeight:400, color: MUTED, marginLeft:4 }}>mm</span>
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
+            <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+              {chuvas.map(c => (
+                <div key={c.id} style={{
+                  display:"flex", alignItems:"center", gap:12,
+                  background: SURFACE, border:`1px solid ${LINE}`,
+                  borderLeft:`3px solid ${BLUE}`,
+                  borderRadius:"0 10px 10px 0", padding:"12px 14px",
+                }}>
+                  <div style={{
+                    width:32, height:32, borderRadius:8,
+                    background: BLUE_DIM, display:"flex", alignItems:"center",
+                    justifyContent:"center", fontSize:16, flexShrink:0,
+                  }}>🌧️</div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                      <span style={{ fontSize:13, fontWeight:700, color: BLUE, fontFamily:"ui-monospace,monospace" }}>
+                        {fmtQty(c.mm)} mm
+                      </span>
+                      <span style={{ fontSize:10, color: BLUE, background: BLUE_DIM, padding:"1px 7px", borderRadius:99, fontWeight:600 }}>{c.fazenda}</span>
+                    </div>
+                    <p style={{ fontSize:11, color: MUTED, marginTop:2 }}>
+                      {new Date(c.data+"T12:00:00").toLocaleDateString("pt-BR")}
+                      {c.observacao && ` · ${c.observacao}`}
+                    </p>
+                  </div>
+                  <button onClick={() => excluirChuva(c.id)} style={{
+                    padding:"4px 8px", borderRadius:6, fontSize:11,
+                    background: RED_DIM, color: RED, border:"none", cursor:"pointer", flexShrink:0,
+                  }}>✕</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ── USUÁRIOS ──────────────────────────────────────── */}
         {aba === "usuarios" && isAdmin && (
           <div>
@@ -776,6 +885,32 @@ export default function Home() {
           );
         })}
       </nav>
+
+      {/* ── Modal: Registrar Chuva ──────────────────────────── */}
+      {modalChuva && (
+        <Modal title="Registrar Chuva" onClose={() => { setModalChuva(false); setErro(""); }}>
+          <form onSubmit={registrarChuva} style={{ display:"flex", flexDirection:"column", gap:12 }}>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+              <Field label="Fazenda">
+                <select style={iStyle} value={formChuva.fazenda} onChange={e => setFormChuva({ ...formChuva, fazenda: e.target.value })}>
+                  {fazendas.map(f => <option key={f.id}>{f.nome}</option>)}
+                </select>
+              </Field>
+              <Field label="Data">
+                <input type="date" style={iStyle} value={formChuva.data} onChange={e => setFormChuva({ ...formChuva, data: e.target.value })} required />
+              </Field>
+            </div>
+            <Field label="Precipitação (mm)">
+              <input type="number" min="0" step="0.1" style={iStyle} placeholder="0.0" value={formChuva.mm} onChange={e => setFormChuva({ ...formChuva, mm: e.target.value })} required autoFocus />
+            </Field>
+            <Field label="Observação (opcional)">
+              <input style={iStyle} placeholder="Ex: chuva forte à tarde..." value={formChuva.observacao} onChange={e => setFormChuva({ ...formChuva, observacao: e.target.value })} />
+            </Field>
+            {erro && <p style={{ fontSize:12, color: RED }}>{erro}</p>}
+            <ModalActions loading={loading} labelOk="Registrar" colorOk={BLUE} bgOk={BLUE_DIM} borderOk={BLUE} onCancel={() => { setModalChuva(false); setErro(""); }} />
+          </form>
+        </Modal>
+      )}
 
       {/* ── Modal: Registrar Carga ──────────────────────────── */}
       {modalCarga && (

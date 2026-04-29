@@ -63,7 +63,17 @@ export async function initDb() {
     INSERT INTO fazendas (nome) VALUES ('Dom'), ('Tinguara'), ('Santa Rosa'), ('Santa Rita')
     ON CONFLICT (nome) DO NOTHING
   `;
-  await sql`DELETE FROM fazendas WHERE nome = 'Copasul'
+  await sql`DELETE FROM fazendas WHERE nome = 'Copasul'`;
+  await sql`DELETE FROM produtos WHERE fazenda = 'Copasul'`;
+  await sql`
+    CREATE TABLE IF NOT EXISTS chuvas (
+      id SERIAL PRIMARY KEY,
+      fazenda TEXT NOT NULL,
+      mm REAL NOT NULL,
+      data DATE NOT NULL DEFAULT CURRENT_DATE,
+      observacao TEXT NOT NULL DEFAULT '',
+      criado_em TIMESTAMP NOT NULL DEFAULT NOW()
+    )
   `;
   await sql`
     CREATE TABLE IF NOT EXISTS usuarios (
