@@ -9,6 +9,8 @@ const GREEN = "#3fb950";
 const GREEN_DIM = "#1a3a1e";
 const RED = "#f85149";
 const RED_DIM = "#3a1a1a";
+const AMBER = "#e3b341";
+const AMBER_DIM = "#2d2200";
 const TEXT = "#e6edf3";
 const MUTED = "#8b949e";
 
@@ -53,6 +55,7 @@ export default function Home() {
   const [novaMov, setNovaMov] = useState({ tipo: "ENTRADA", quantidade: "", observacao: "", responsavel: "" });
   const [nomeResponsavel, setNomeResponsavel] = useState("");
 
+  const [busca, setBusca] = useState("");
   const [categoriasAbertas, setCategoriasAbertas] = useState<Record<string, boolean>>({});
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
@@ -148,10 +151,12 @@ export default function Home() {
 
   const totalItens = produtos.length;
   const estoqueBaixo = produtos.filter((p) => p.quantidade <= 0).length;
+  const produtosFiltrados = busca.trim()
+    ? produtos.filter(p => p.nome.toLowerCase().includes(busca.toLowerCase()))
+    : produtos;
 
-  // Agrupar por categoria e ordenar alfabeticamente dentro de cada grupo
-  const categorias = ORDEM_CATEGORIAS.filter(cat => produtos.some(p => p.categoria === cat));
-  const outrasCateg = [...new Set(produtos.map(p => p.categoria))].filter(c => !ORDEM_CATEGORIAS.includes(c)).sort();
+  const categorias = ORDEM_CATEGORIAS.filter(cat => produtosFiltrados.some(p => p.categoria === cat));
+  const outrasCateg = [...new Set(produtosFiltrados.map(p => p.categoria))].filter(c => !ORDEM_CATEGORIAS.includes(c)).sort();
   const todasCategorias = [...categorias, ...outrasCateg];
 
   return (
@@ -198,7 +203,7 @@ export default function Home() {
         </div>
         <div className="rounded-xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
           <p className="text-xs uppercase tracking-wide" style={{ color: MUTED }}>Sem estoque</p>
-          <p className="text-3xl font-bold mt-1" style={{ color: estoqueBaixo > 0 ? RED : MUTED }}>{estoqueBaixo}</p>
+          <p className="text-3xl font-bold mt-1" style={{ color: estoqueBaixo > 0 ? AMBER : MUTED }}>{estoqueBaixo}</p>
         </div>
       </div>
 
@@ -225,6 +230,13 @@ export default function Home() {
       <div className="max-w-3xl mx-auto px-4 py-4">
         {aba === "estoque" && (
           <div className="space-y-4">
+            <input
+              className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none"
+              style={{ ...iStyle, background: CARD }}
+              placeholder="Buscar produto..."
+              value={busca}
+              onChange={e => setBusca(e.target.value)}
+            />
             <button
               onClick={() => { setNovoProduto({ nome: "", unidade: "kg", categoria: "Geral", fazenda, quantidadeInicial: "" }); setModalNovo(true); }}
               className="w-full py-3 rounded-xl font-semibold text-sm transition-colors"
@@ -240,7 +252,7 @@ export default function Home() {
             )}
 
             {todasCategorias.map(cat => {
-              const prods = produtos
+              const prods = produtosFiltrados
                 .filter(p => p.categoria === cat)
                 .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
               const aberta = categoriasAbertas[cat] !== false;
@@ -260,9 +272,9 @@ export default function Home() {
                     {prods.map(p => (
                       <div key={p.id} className="rounded-lg px-3 py-2 flex items-center gap-2" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
                         <p className="font-medium text-sm flex-1 min-w-0 truncate" style={{ color: TEXT }}>{p.nome}</p>
-                        <span className="font-bold text-sm shrink-0" style={{ color: p.quantidade <= 0 ? RED : GREEN }}>
+                        <span className="font-bold text-sm shrink-0" style={{ fontFamily: "monospace", color: p.quantidade < 0 ? RED : p.quantidade === 0 ? AMBER : GREEN }}>
                           {p.quantidade % 1 === 0 ? p.quantidade : p.quantidade.toFixed(2)}
-                          <span className="text-xs font-normal ml-1" style={{ color: MUTED }}>{p.unidade}</span>
+                          <span className="text-xs font-normal ml-1" style={{ fontFamily: "inherit", color: MUTED }}>{p.unidade}</span>
                         </span>
                         <div className="flex gap-1 shrink-0">
                           {CATEGORIAS_COM_BULA.includes(p.categoria) && (
