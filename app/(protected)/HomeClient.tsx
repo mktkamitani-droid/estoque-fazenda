@@ -10,7 +10,6 @@ const GREEN_DIM = "#1a3a1e";
 const RED = "#f85149";
 const RED_DIM = "#3a1a1a";
 const AMBER = "#e3b341";
-const AMBER_DIM = "#2d2200";
 const TEXT = "#e6edf3";
 const MUTED = "#8b949e";
 
@@ -42,11 +41,7 @@ type Movimentacao = {
 const ORDEM_CATEGORIAS = ["Grãos", "Semente", "Ração", "Adubo", "Inseticida", "Herbicida", "Fungicida", "Medicamentos", "Diesel", "Peças", "Geral"];
 const CATEGORIAS_COM_BULA = ["Inseticida", "Herbicida", "Fungicida", "Medicamentos"];
 
-const iStyle = {
-  background: BG,
-  color: TEXT,
-  border: `1px solid ${BORDER}`,
-};
+const iStyle = { background: BG, color: TEXT, border: `1px solid ${BORDER}` };
 
 export default function Home() {
   const [aba, setAba] = useState<"estoque" | "historico">("estoque");
@@ -54,6 +49,7 @@ export default function Home() {
   const [fazenda, setFazenda] = useState("");
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);
+  const [sidebarAberta, setSidebarAberta] = useState(false);
 
   const [modalNovo, setModalNovo] = useState(false);
   const [modalMov, setModalMov] = useState<Produto | null>(null);
@@ -125,12 +121,7 @@ export default function Home() {
         await fetch("/api/movimentacoes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            produtoId: produto.id,
-            tipo: "ENTRADA",
-            quantidade: novoProduto.quantidadeInicial,
-            observacao: "Estoque inicial",
-          }),
+          body: JSON.stringify({ produtoId: produto.id, tipo: "ENTRADA", quantidade: novoProduto.quantidadeInicial, observacao: "Estoque inicial" }),
         });
       }
       await carregarProdutos();
@@ -173,50 +164,58 @@ export default function Home() {
   }
 
   const totalItens = produtos.length;
-  const estoqueBaixo = produtos.filter((p) => p.quantidade <= 0).length;
+  const estoqueBaixo = produtos.filter(p => p.quantidade <= 0).length;
   const produtosFiltrados = busca.trim()
     ? produtos.filter(p => p.nome.toLowerCase().includes(busca.toLowerCase()))
     : produtos;
-
   const categorias = ORDEM_CATEGORIAS.filter(cat => produtosFiltrados.some(p => p.categoria === cat));
   const outrasCateg = [...new Set(produtosFiltrados.map(p => p.categoria))].filter(c => !ORDEM_CATEGORIAS.includes(c)).sort();
   const todasCategorias = [...categorias, ...outrasCateg];
 
   return (
-    <div className="min-h-screen" style={{ background: BG, color: TEXT }}>
-      {/* Header */}
-      <header className="px-4 py-4 shadow-lg" style={{ background: CARD, borderBottom: `1px solid ${BORDER}` }}>
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🌾</span>
-            <div>
-              <h1 className="text-xl font-bold leading-tight" style={{ color: GREEN }}>Kamitani Agro</h1>
-              <p className="text-xs" style={{ color: MUTED }}>Controle de estoque</p>
-            </div>
-          </div>
-          <button onClick={sair} className="text-xs underline" style={{ color: MUTED }}>Sair</button>
-        </div>
-      </header>
+    <div className="min-h-screen flex" style={{ background: BG, color: TEXT }}>
 
-      {/* Seletor de fazendas */}
-      <div className="max-w-3xl mx-auto px-4 pt-4">
-        <div className="flex gap-2 overflow-x-auto pb-1">
+      {/* Overlay mobile */}
+      {sidebarAberta && (
+        <div
+          className="fixed inset-0 z-30 lg:hidden"
+          style={{ background: "rgba(0,0,0,0.65)" }}
+          onClick={() => setSidebarAberta(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed top-0 left-0 h-full z-40 flex flex-col transition-transform duration-300 lg:static lg:translate-x-0 ${sidebarAberta ? "translate-x-0" : "-translate-x-full"}`}
+        style={{ width: 224, background: CARD, borderRight: `1px solid ${BORDER}`, flexShrink: 0 }}
+      >
+        {/* Logo */}
+        <div className="px-4 py-5 flex items-center gap-3" style={{ borderBottom: `1px solid ${BORDER}` }}>
+          <span className="text-2xl">🌾</span>
+          <div>
+            <p className="font-bold text-sm leading-tight" style={{ color: GREEN }}>Kamitani Agro</p>
+            <p className="text-xs" style={{ color: MUTED }}>Controle de estoque</p>
+          </div>
+        </div>
+
+        {/* Lista de fazendas */}
+        <div className="flex-1 overflow-y-auto py-3 px-2">
+          <p className="text-xs font-semibold uppercase tracking-widest px-2 mb-2" style={{ color: MUTED }}>Fazendas</p>
           {fazendas.map(f => {
             const ativa = fazenda === f.nome;
             return (
               <button
                 key={f.id}
-                onClick={() => setFazenda(f.nome)}
-                className="flex flex-col items-start shrink-0 rounded-xl px-3 py-2 transition-all"
+                onClick={() => { setFazenda(f.nome); setSidebarAberta(false); }}
+                className="w-full text-left flex flex-col px-3 py-2.5 rounded-lg mb-1 transition-all"
                 style={{
-                  background: ativa ? GREEN_DIM : CARD,
-                  border: `1px solid ${ativa ? GREEN : BORDER}`,
-                  minWidth: 90,
+                  background: ativa ? GREEN_DIM : "transparent",
+                  border: `1px solid ${ativa ? GREEN : "transparent"}`,
                 }}
               >
-                <span className="text-xs font-bold whitespace-nowrap" style={{ color: ativa ? GREEN : TEXT }}>{f.nome}</span>
+                <span className="text-sm font-semibold" style={{ color: ativa ? GREEN : TEXT }}>{f.nome}</span>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs" style={{ color: MUTED }}>{f.total_produtos} prod.</span>
+                  <span className="text-xs" style={{ color: MUTED }}>{f.total_produtos} produtos</span>
                   {f.sem_estoque > 0 && (
                     <span className="text-xs font-semibold" style={{ color: AMBER }}>⚠ {f.sem_estoque}</span>
                   )}
@@ -225,150 +224,179 @@ export default function Home() {
             );
           })}
         </div>
-      </div>
 
-      {/* Cards resumo */}
-      <div className="max-w-3xl mx-auto px-4 pt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-          <p className="text-xs uppercase tracking-wide" style={{ color: MUTED }}>Produtos</p>
-          <p className="text-3xl font-bold mt-1" style={{ color: GREEN }}>{totalItens}</p>
+        {/* Sair */}
+        <div className="px-3 py-4" style={{ borderTop: `1px solid ${BORDER}` }}>
+          <button
+            onClick={sair}
+            className="w-full py-2 rounded-lg text-sm font-medium"
+            style={{ background: BG, color: MUTED, border: `1px solid ${BORDER}` }}
+          >
+            Sair
+          </button>
         </div>
-        <div className="rounded-xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-          <p className="text-xs uppercase tracking-wide" style={{ color: MUTED }}>Sem estoque</p>
-          <p className="text-3xl font-bold mt-1" style={{ color: estoqueBaixo > 0 ? AMBER : MUTED }}>{estoqueBaixo}</p>
-        </div>
-      </div>
+      </aside>
 
-      {/* Abas */}
-      <div className="max-w-3xl mx-auto px-4 pt-4">
-        <div className="flex gap-1 p-1 rounded-xl" style={{ background: CARD }}>
-          {(["estoque", "historico"] as const).map(a => (
-            <button
-              key={a}
-              onClick={() => setAba(a)}
-              className="flex-1 py-2 rounded-lg text-sm font-medium transition-colors"
-              style={{
-                background: aba === a ? GREEN_DIM : "transparent",
-                color: aba === a ? GREEN : MUTED,
-              }}
-            >
-              {a === "estoque" ? "Estoque" : "Histórico"}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* Conteúdo principal */}
+      <div className="flex-1 min-w-0 flex flex-col">
 
-      {/* Conteúdo */}
-      <div className="max-w-3xl mx-auto px-4 py-4">
-        {aba === "estoque" && (
-          <div className="space-y-4">
-            <input
-              className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none"
-              style={{ ...iStyle, background: CARD }}
-              placeholder="Buscar produto..."
-              value={busca}
-              onChange={e => setBusca(e.target.value)}
-            />
-            <button
-              onClick={() => { setNovoProduto({ nome: "", unidade: "kg", categoria: "Geral", fazenda, quantidadeInicial: "" }); setModalNovo(true); }}
-              className="w-full py-3 rounded-xl font-semibold text-sm transition-colors"
-              style={{ background: GREEN_DIM, color: GREEN, border: `1px solid ${GREEN}` }}
-            >
-              + Novo Produto
-            </button>
-
-            {produtos.length === 0 && (
-              <div className="text-center py-12 text-sm" style={{ color: MUTED }}>
-                Nenhum produto cadastrado ainda.
-              </div>
-            )}
-
-            {todasCategorias.map(cat => {
-              const prods = produtosFiltrados
-                .filter(p => p.categoria === cat)
-                .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
-              const aberta = categoriasAbertas[cat] !== false;
-              return (
-                <div key={cat}>
-                  <button
-                    onClick={() => setCategoriasAbertas(prev => ({ ...prev, [cat]: !aberta }))}
-                    className="w-full flex items-center gap-2 mb-1.5"
-                  >
-                    <div className="h-px flex-1" style={{ background: BORDER }} />
-                    <span className="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ color: GREEN, background: GREEN_DIM }}>
-                      {cat} <span style={{ color: MUTED }}>{aberta ? "▲" : "▼"}</span>
-                    </span>
-                    <div className="h-px flex-1" style={{ background: BORDER }} />
-                  </button>
-                  {aberta && <div className="space-y-1">
-                    {prods.map(p => (
-                      <div key={p.id} className="rounded-lg px-3 py-2 flex items-center gap-2" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-                        <p className="font-medium text-sm flex-1 min-w-0 truncate" style={{ color: TEXT }}>{p.nome}</p>
-                        <span className="font-bold text-sm shrink-0" style={{ fontFamily: "monospace", color: p.quantidade < 0 ? RED : p.quantidade === 0 ? AMBER : GREEN }}>
-                          {p.quantidade % 1 === 0 ? p.quantidade : p.quantidade.toFixed(2)}
-                          <span className="text-xs font-normal ml-1" style={{ fontFamily: "inherit", color: MUTED }}>{p.unidade}</span>
-                        </span>
-                        <div className="flex gap-1 shrink-0">
-                          {CATEGORIAS_COM_BULA.includes(p.categoria) && (
-                            <a
-                              href={`https://www.google.com/search?q=${encodeURIComponent(p.nome + " bula")}&as_sitesearch=gov.br`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-2 py-1 rounded-md text-xs"
-                              style={{ background: "#1a2a3a", color: "#58a6ff" }}
-                              title="Ver bula"
-                            >
-                              📋
-                            </a>
-                          )}
-                          <button onClick={() => { setModalMov(p); setNovaMov({ tipo: "ENTRADA", quantidade: "", observacao: "", responsavel: nomeResponsavel }); }}
-                            className="px-2 py-1 rounded-md text-xs font-bold" style={{ background: GREEN_DIM, color: GREEN }}>+</button>
-                          <button onClick={() => { setModalMov(p); setNovaMov({ tipo: "SAIDA", quantidade: "", observacao: "", responsavel: nomeResponsavel }); }}
-                            className="px-2 py-1 rounded-md text-xs font-bold" style={{ background: RED_DIM, color: RED }}>−</button>
-                          <button onClick={() => excluirProduto(p.id)}
-                            className="px-2 py-1 rounded-md text-xs" style={{ background: BORDER, color: MUTED }}>✕</button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>}
-                </div>
-              );
-            })}
+        {/* Header */}
+        <header className="sticky top-0 z-20 px-4 py-3 flex items-center gap-3" style={{ background: CARD, borderBottom: `1px solid ${BORDER}` }}>
+          <button
+            className="lg:hidden p-2 rounded-lg"
+            style={{ color: MUTED, background: BG, border: `1px solid ${BORDER}` }}
+            onClick={() => setSidebarAberta(true)}
+          >
+            ☰
+          </button>
+          <div className="flex-1 min-w-0">
+            <h1 className="font-bold text-base leading-tight truncate" style={{ color: TEXT }}>{fazenda || "Kamitani Agro"}</h1>
+            <p className="text-xs" style={{ color: MUTED }}>Estoque da fazenda</p>
           </div>
-        )}
+        </header>
 
-        {aba === "historico" && (
-          <div className="space-y-2">
-            {movimentacoes.length === 0 && (
-              <div className="text-center py-12 text-sm" style={{ color: MUTED }}>
-                Nenhuma movimentação registrada.
-              </div>
-            )}
-            {movimentacoes.map((m) => (
-              <div key={m.id} className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-                <span className="text-lg" style={{ color: m.tipo === "ENTRADA" ? GREEN : RED }}>
-                  {m.tipo === "ENTRADA" ? "↑" : "↓"}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate" style={{ color: TEXT }}>{m.produto.nome}</p>
-                  <p className="text-xs truncate" style={{ color: MUTED }}>
-                    {m.responsavel && <span className="font-medium" style={{ color: "#58a6ff" }}>{m.responsavel}</span>}
-                    {m.responsavel && m.observacao && " · "}
-                    {m.observacao}
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="font-bold text-sm" style={{ color: m.tipo === "ENTRADA" ? GREEN : RED }}>
-                    {m.tipo === "ENTRADA" ? "+" : "−"}{m.quantidade} {m.produto.unidade}
-                  </p>
-                  <p className="text-xs" style={{ color: MUTED }}>
-                    {new Date(m.criadoEm).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
-                  </p>
-                </div>
-              </div>
+        <div className="flex-1 px-4 py-4 max-w-2xl w-full mx-auto">
+
+          {/* Cards resumo */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="rounded-xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+              <p className="text-xs uppercase tracking-wide" style={{ color: MUTED }}>Produtos</p>
+              <p className="text-3xl font-bold mt-1" style={{ color: GREEN }}>{totalItens}</p>
+            </div>
+            <div className="rounded-xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+              <p className="text-xs uppercase tracking-wide" style={{ color: MUTED }}>Sem estoque</p>
+              <p className="text-3xl font-bold mt-1" style={{ color: estoqueBaixo > 0 ? AMBER : MUTED }}>{estoqueBaixo}</p>
+            </div>
+          </div>
+
+          {/* Abas */}
+          <div className="flex gap-1 p-1 rounded-xl mb-4" style={{ background: CARD }}>
+            {(["estoque", "historico"] as const).map(a => (
+              <button
+                key={a}
+                onClick={() => setAba(a)}
+                className="flex-1 py-2 rounded-lg text-sm font-medium transition-colors"
+                style={{ background: aba === a ? GREEN_DIM : "transparent", color: aba === a ? GREEN : MUTED }}
+              >
+                {a === "estoque" ? "Estoque" : "Histórico"}
+              </button>
             ))}
           </div>
-        )}
+
+          {/* Estoque */}
+          {aba === "estoque" && (
+            <div className="space-y-4">
+              <input
+                className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none"
+                style={{ ...iStyle, background: CARD }}
+                placeholder="Buscar produto..."
+                value={busca}
+                onChange={e => setBusca(e.target.value)}
+              />
+              <button
+                onClick={() => { setNovoProduto({ nome: "", unidade: "kg", categoria: "Geral", fazenda, quantidadeInicial: "" }); setModalNovo(true); }}
+                className="w-full py-3 rounded-xl font-semibold text-sm"
+                style={{ background: GREEN_DIM, color: GREEN, border: `1px solid ${GREEN}` }}
+              >
+                + Novo Produto
+              </button>
+
+              {produtos.length === 0 && (
+                <div className="text-center py-12 text-sm" style={{ color: MUTED }}>
+                  Nenhum produto cadastrado ainda.
+                </div>
+              )}
+
+              {todasCategorias.map(cat => {
+                const prods = produtosFiltrados
+                  .filter(p => p.categoria === cat)
+                  .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+                const aberta = categoriasAbertas[cat] !== false;
+                return (
+                  <div key={cat}>
+                    <button
+                      onClick={() => setCategoriasAbertas(prev => ({ ...prev, [cat]: !aberta }))}
+                      className="w-full flex items-center gap-2 mb-1.5"
+                    >
+                      <div className="h-px flex-1" style={{ background: BORDER }} />
+                      <span className="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ color: GREEN, background: GREEN_DIM }}>
+                        {cat} <span style={{ color: MUTED }}>{aberta ? "▲" : "▼"}</span>
+                      </span>
+                      <div className="h-px flex-1" style={{ background: BORDER }} />
+                    </button>
+                    {aberta && (
+                      <div className="space-y-1">
+                        {prods.map(p => (
+                          <div key={p.id} className="rounded-lg px-3 py-2 flex items-center gap-2" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+                            <p className="font-medium text-sm flex-1 min-w-0 truncate" style={{ color: TEXT }}>{p.nome}</p>
+                            <span className="font-bold text-sm shrink-0" style={{ fontFamily: "monospace", color: p.quantidade < 0 ? RED : p.quantidade === 0 ? AMBER : GREEN }}>
+                              {p.quantidade % 1 === 0 ? p.quantidade : p.quantidade.toFixed(2)}
+                              <span className="text-xs font-normal ml-1" style={{ fontFamily: "inherit", color: MUTED }}>{p.unidade}</span>
+                            </span>
+                            <div className="flex gap-1 shrink-0">
+                              {CATEGORIAS_COM_BULA.includes(p.categoria) && (
+                                <a
+                                  href={`https://www.google.com/search?q=${encodeURIComponent(p.nome + " bula")}&as_sitesearch=gov.br`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-2 py-1 rounded-md text-xs"
+                                  style={{ background: "#1a2a3a", color: "#58a6ff" }}
+                                  title="Ver bula"
+                                >
+                                  📋
+                                </a>
+                              )}
+                              <button onClick={() => { setModalMov(p); setNovaMov({ tipo: "ENTRADA", quantidade: "", observacao: "", responsavel: nomeResponsavel }); }}
+                                className="px-2 py-1 rounded-md text-xs font-bold" style={{ background: GREEN_DIM, color: GREEN }}>+</button>
+                              <button onClick={() => { setModalMov(p); setNovaMov({ tipo: "SAIDA", quantidade: "", observacao: "", responsavel: nomeResponsavel }); }}
+                                className="px-2 py-1 rounded-md text-xs font-bold" style={{ background: RED_DIM, color: RED }}>−</button>
+                              <button onClick={() => excluirProduto(p.id)}
+                                className="px-2 py-1 rounded-md text-xs" style={{ background: BORDER, color: MUTED }}>✕</button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Histórico */}
+          {aba === "historico" && (
+            <div className="space-y-2">
+              {movimentacoes.length === 0 && (
+                <div className="text-center py-12 text-sm" style={{ color: MUTED }}>
+                  Nenhuma movimentação registrada.
+                </div>
+              )}
+              {movimentacoes.map(m => (
+                <div key={m.id} className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+                  <span className="text-lg" style={{ color: m.tipo === "ENTRADA" ? GREEN : RED }}>
+                    {m.tipo === "ENTRADA" ? "↑" : "↓"}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate" style={{ color: TEXT }}>{m.produto.nome}</p>
+                    <p className="text-xs truncate" style={{ color: MUTED }}>
+                      {m.responsavel && <span className="font-medium" style={{ color: "#58a6ff" }}>{m.responsavel}</span>}
+                      {m.responsavel && m.observacao && " · "}
+                      {m.observacao}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-bold text-sm" style={{ color: m.tipo === "ENTRADA" ? GREEN : RED }}>
+                      {m.tipo === "ENTRADA" ? "+" : "−"}{m.quantidade} {m.produto.unidade}
+                    </p>
+                    <p className="text-xs" style={{ color: MUTED }}>
+                      {new Date(m.criadoEm).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Modal: Novo Produto */}
@@ -384,16 +412,15 @@ export default function Home() {
                   style={iStyle}
                   placeholder="Ex: Milho, Ração, Fertilizante..."
                   value={novoProduto.nome}
-                  onChange={(e) => setNovoProduto({ ...novoProduto, nome: e.target.value })}
-                  required
-                  autoFocus
+                  onChange={e => setNovoProduto({ ...novoProduto, nome: e.target.value })}
+                  required autoFocus
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium mb-1" style={{ color: MUTED }}>Unidade</label>
                   <select className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none" style={iStyle}
-                    value={novoProduto.unidade} onChange={(e) => setNovoProduto({ ...novoProduto, unidade: e.target.value })}>
+                    value={novoProduto.unidade} onChange={e => setNovoProduto({ ...novoProduto, unidade: e.target.value })}>
                     <option value="kg">kg</option>
                     <option value="ton">ton</option>
                     <option value="L">L</option>
@@ -405,7 +432,7 @@ export default function Home() {
                 <div>
                   <label className="block text-xs font-medium mb-1" style={{ color: MUTED }}>Categoria</label>
                   <select className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none" style={iStyle}
-                    value={novoProduto.categoria} onChange={(e) => setNovoProduto({ ...novoProduto, categoria: e.target.value })}>
+                    value={novoProduto.categoria} onChange={e => setNovoProduto({ ...novoProduto, categoria: e.target.value })}>
                     <option>Grãos</option>
                     <option>Semente</option>
                     <option>Ração</option>
@@ -423,7 +450,7 @@ export default function Home() {
               <div>
                 <label className="block text-xs font-medium mb-1" style={{ color: MUTED }}>Fazenda</label>
                 <select className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none" style={iStyle}
-                  value={novoProduto.fazenda} onChange={(e) => setNovoProduto({ ...novoProduto, fazenda: e.target.value })}>
+                  value={novoProduto.fazenda} onChange={e => setNovoProduto({ ...novoProduto, fazenda: e.target.value })}>
                   {fazendas.map(f => <option key={f.id}>{f.nome}</option>)}
                 </select>
               </div>
@@ -435,7 +462,7 @@ export default function Home() {
                   style={iStyle}
                   placeholder="0"
                   value={novoProduto.quantidadeInicial}
-                  onChange={(e) => setNovoProduto({ ...novoProduto, quantidadeInicial: e.target.value })}
+                  onChange={e => setNovoProduto({ ...novoProduto, quantidadeInicial: e.target.value })}
                 />
               </div>
               {erro && <p className="text-xs" style={{ color: RED }}>{erro}</p>}
@@ -477,15 +504,13 @@ export default function Home() {
                 </button>
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1" style={{ color: MUTED }}>
-                  Quantidade ({modalMov.unidade})
-                </label>
+                <label className="block text-xs font-medium mb-1" style={{ color: MUTED }}>Quantidade ({modalMov.unidade})</label>
                 <input type="number" min="0.01" step="0.01"
                   className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none"
                   style={iStyle}
                   placeholder="0"
                   value={novaMov.quantidade}
-                  onChange={(e) => setNovaMov({ ...novaMov, quantidade: e.target.value })}
+                  onChange={e => setNovaMov({ ...novaMov, quantidade: e.target.value })}
                   required autoFocus
                 />
               </div>
@@ -496,7 +521,7 @@ export default function Home() {
                   style={iStyle}
                   placeholder="Seu nome"
                   value={nomeResponsavel}
-                  onChange={(e) => setNomeResponsavel(e.target.value)}
+                  onChange={e => setNomeResponsavel(e.target.value)}
                 />
               </div>
               <div>
@@ -506,7 +531,7 @@ export default function Home() {
                   style={iStyle}
                   placeholder="Ex: Compra fornecedor X..."
                   value={novaMov.observacao}
-                  onChange={(e) => setNovaMov({ ...novaMov, observacao: e.target.value })}
+                  onChange={e => setNovaMov({ ...novaMov, observacao: e.target.value })}
                 />
               </div>
               {erro && <p className="text-xs" style={{ color: RED }}>{erro}</p>}
@@ -517,11 +542,7 @@ export default function Home() {
                 </button>
                 <button type="submit" disabled={carregando}
                   className="flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60"
-                  style={{
-                    background: novaMov.tipo === "ENTRADA" ? GREEN_DIM : RED_DIM,
-                    color: novaMov.tipo === "ENTRADA" ? GREEN : RED,
-                    border: `1px solid ${novaMov.tipo === "ENTRADA" ? GREEN : RED}`,
-                  }}>
+                  style={{ background: novaMov.tipo === "ENTRADA" ? GREEN_DIM : RED_DIM, color: novaMov.tipo === "ENTRADA" ? GREEN : RED, border: `1px solid ${novaMov.tipo === "ENTRADA" ? GREEN : RED}` }}>
                   {carregando ? "Salvando..." : "Registrar"}
                 </button>
               </div>
