@@ -2,6 +2,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+const BG = "#0d1117";
+const CARD = "#161b22";
+const BORDER = "#30363d";
+const GREEN = "#3fb950";
+const GREEN_DIM = "#1a3a1e";
+const RED = "#f85149";
+const RED_DIM = "#3a1a1a";
+const TEXT = "#e6edf3";
+const MUTED = "#8b949e";
+
 type Produto = {
   id: number;
   nome: string;
@@ -19,15 +29,25 @@ type Movimentacao = {
   produto: { nome: string; unidade: string };
 };
 
+const FAZENDAS = ["Tinguara", "Dom", "Santa Rosa", "Santa Rita", "Copasul"];
+const ORDEM_CATEGORIAS = ["Grãos", "Ração", "Inseticida", "Herbicida", "Fungicida", "Medicamentos", "Geral"];
+
+const iStyle = {
+  background: BG,
+  color: TEXT,
+  border: `1px solid ${BORDER}`,
+};
+
 export default function Home() {
   const [aba, setAba] = useState<"estoque" | "historico">("estoque");
+  const [fazenda, setFazenda] = useState(FAZENDAS[0]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);
 
   const [modalNovo, setModalNovo] = useState(false);
   const [modalMov, setModalMov] = useState<Produto | null>(null);
 
-  const [novoProduto, setNovoProduto] = useState({ nome: "", unidade: "kg", categoria: "Geral", quantidadeInicial: "" });
+  const [novoProduto, setNovoProduto] = useState({ nome: "", unidade: "kg", categoria: "Geral", fazenda: FAZENDAS[0], quantidadeInicial: "" });
   const [novaMov, setNovaMov] = useState({ tipo: "ENTRADA", quantidade: "", observacao: "" });
 
   const [carregando, setCarregando] = useState(false);
@@ -39,8 +59,8 @@ export default function Home() {
     router.push("/login");
   }
 
-  async function carregarProdutos() {
-    const r = await fetch("/api/produtos");
+  async function carregarProdutos(faz = fazenda) {
+    const r = await fetch(`/api/produtos?fazenda=${encodeURIComponent(faz)}`);
     setProdutos(await r.json());
   }
 
@@ -50,9 +70,9 @@ export default function Home() {
   }
 
   useEffect(() => {
-    carregarProdutos();
+    carregarProdutos(fazenda);
     carregarHistorico();
-  }, []);
+  }, [fazenda]);
 
   async function criarProduto(e: React.FormEvent) {
     e.preventDefault();
@@ -80,7 +100,7 @@ export default function Home() {
       await carregarProdutos();
       await carregarHistorico();
       setModalNovo(false);
-      setNovoProduto({ nome: "", unidade: "kg", categoria: "Geral", quantidadeInicial: "" });
+      setNovoProduto({ nome: "", unidade: "kg", categoria: "Geral", fazenda, quantidadeInicial: "" });
     } else {
       setErro("Erro ao cadastrar produto.");
     }
@@ -118,140 +138,170 @@ export default function Home() {
   const totalItens = produtos.length;
   const estoqueBaixo = produtos.filter((p) => p.quantidade <= 0).length;
 
+  // Agrupar por categoria e ordenar alfabeticamente dentro de cada grupo
+  const categorias = ORDEM_CATEGORIAS.filter(cat => produtos.some(p => p.categoria === cat));
+  const outrasCateg = [...new Set(produtos.map(p => p.categoria))].filter(c => !ORDEM_CATEGORIAS.includes(c)).sort();
+  const todasCategorias = [...categorias, ...outrasCateg];
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: BG, color: TEXT }}>
       {/* Header */}
-      <header className="bg-green-700 text-white px-4 py-4 shadow">
+      <header className="px-4 py-4 shadow-lg" style={{ background: CARD, borderBottom: `1px solid ${BORDER}` }}>
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-2xl">🌾</span>
             <div>
-              <h1 className="text-xl font-bold leading-tight">Kamitani Agro</h1>
-              <p className="text-green-200 text-xs">Controle de estoque</p>
+              <h1 className="text-xl font-bold leading-tight" style={{ color: GREEN }}>Kamitani Agro</h1>
+              <p className="text-xs" style={{ color: MUTED }}>Controle de estoque</p>
             </div>
           </div>
-          <button
-            onClick={sair}
-            className="text-green-200 hover:text-white text-xs underline"
-          >
-            Sair
-          </button>
+          <button onClick={sair} className="text-xs underline" style={{ color: MUTED }}>Sair</button>
         </div>
       </header>
 
+      {/* Seletor de fazendas */}
+      <div className="max-w-3xl mx-auto px-4 pt-4">
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {FAZENDAS.map(f => (
+            <button
+              key={f}
+              onClick={() => setFazenda(f)}
+              className="whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors shrink-0"
+              style={{
+                background: fazenda === f ? GREEN : CARD,
+                color: fazenda === f ? "#0d1117" : MUTED,
+                border: `1px solid ${fazenda === f ? GREEN : BORDER}`,
+              }}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Cards resumo */}
       <div className="max-w-3xl mx-auto px-4 pt-4 grid grid-cols-2 gap-3">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <p className="text-xs text-gray-500 uppercase tracking-wide">Produtos</p>
-          <p className="text-3xl font-bold text-green-700 mt-1">{totalItens}</p>
+        <div className="rounded-xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+          <p className="text-xs uppercase tracking-wide" style={{ color: MUTED }}>Produtos</p>
+          <p className="text-3xl font-bold mt-1" style={{ color: GREEN }}>{totalItens}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <p className="text-xs text-gray-500 uppercase tracking-wide">Sem estoque</p>
-          <p className={`text-3xl font-bold mt-1 ${estoqueBaixo > 0 ? "text-red-500" : "text-gray-400"}`}>
-            {estoqueBaixo}
-          </p>
+        <div className="rounded-xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+          <p className="text-xs uppercase tracking-wide" style={{ color: MUTED }}>Sem estoque</p>
+          <p className="text-3xl font-bold mt-1" style={{ color: estoqueBaixo > 0 ? RED : MUTED }}>{estoqueBaixo}</p>
         </div>
       </div>
 
       {/* Abas */}
       <div className="max-w-3xl mx-auto px-4 pt-4">
-        <div className="flex gap-1 bg-gray-200 p-1 rounded-xl">
-          <button
-            onClick={() => setAba("estoque")}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-              aba === "estoque" ? "bg-white text-green-700 shadow-sm" : "text-gray-500"
-            }`}
-          >
-            Estoque
-          </button>
-          <button
-            onClick={() => setAba("historico")}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-              aba === "historico" ? "bg-white text-green-700 shadow-sm" : "text-gray-500"
-            }`}
-          >
-            Histórico
-          </button>
+        <div className="flex gap-1 p-1 rounded-xl" style={{ background: CARD }}>
+          {(["estoque", "historico"] as const).map(a => (
+            <button
+              key={a}
+              onClick={() => setAba(a)}
+              className="flex-1 py-2 rounded-lg text-sm font-medium transition-colors"
+              style={{
+                background: aba === a ? GREEN_DIM : "transparent",
+                color: aba === a ? GREEN : MUTED,
+              }}
+            >
+              {a === "estoque" ? "Estoque" : "Histórico"}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Conteúdo */}
       <div className="max-w-3xl mx-auto px-4 py-4">
         {aba === "estoque" && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <button
-              onClick={() => setModalNovo(true)}
-              className="w-full bg-green-700 text-white py-3 rounded-xl font-semibold text-sm hover:bg-green-800 transition-colors"
+              onClick={() => { setNovoProduto({ nome: "", unidade: "kg", categoria: "Geral", fazenda, quantidadeInicial: "" }); setModalNovo(true); }}
+              className="w-full py-3 rounded-xl font-semibold text-sm transition-colors"
+              style={{ background: GREEN_DIM, color: GREEN, border: `1px solid ${GREEN}` }}
             >
               + Novo Produto
             </button>
 
             {produtos.length === 0 && (
-              <div className="text-center text-gray-400 py-12 text-sm">
+              <div className="text-center py-12 text-sm" style={{ color: MUTED }}>
                 Nenhum produto cadastrado ainda.
               </div>
             )}
 
-            {produtos.map((p) => (
-              <div key={p.id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-semibold text-gray-900">{p.nome}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{p.categoria}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className={`text-xl font-bold ${p.quantidade <= 0 ? "text-red-500" : "text-green-700"}`}>
-                      {p.quantidade % 1 === 0 ? p.quantidade : p.quantidade.toFixed(2)}
-                    </p>
-                    <p className="text-xs text-gray-400">{p.unidade}</p>
+            {todasCategorias.map(cat => {
+              const prods = produtos
+                .filter(p => p.categoria === cat)
+                .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+              return (
+                <div key={cat}>
+                  <p className="text-xs font-bold uppercase tracking-wider mb-2 px-1" style={{ color: MUTED }}>
+                    {cat}
+                  </p>
+                  <div className="space-y-2">
+                    {prods.map(p => (
+                      <div key={p.id} className="rounded-xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+                        <div className="flex items-start justify-between">
+                          <p className="font-semibold" style={{ color: TEXT }}>{p.nome}</p>
+                          <div className="text-right">
+                            <p className="text-xl font-bold" style={{ color: p.quantidade <= 0 ? RED : GREEN }}>
+                              {p.quantidade % 1 === 0 ? p.quantidade : p.quantidade.toFixed(2)}
+                            </p>
+                            <p className="text-xs" style={{ color: MUTED }}>{p.unidade}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            onClick={() => { setModalMov(p); setNovaMov({ tipo: "ENTRADA", quantidade: "", observacao: "" }); }}
+                            className="flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                            style={{ background: GREEN_DIM, color: GREEN }}
+                          >
+                            + Entrada
+                          </button>
+                          <button
+                            onClick={() => { setModalMov(p); setNovaMov({ tipo: "SAIDA", quantidade: "", observacao: "" }); }}
+                            className="flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                            style={{ background: RED_DIM, color: RED }}
+                          >
+                            − Saída
+                          </button>
+                          <button
+                            onClick={() => excluirProduto(p.id)}
+                            className="px-3 py-1.5 rounded-lg text-xs transition-colors"
+                            style={{ background: BORDER, color: MUTED }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div className="flex gap-2 mt-3">
-                  <button
-                    onClick={() => { setModalMov(p); setNovaMov({ tipo: "ENTRADA", quantidade: "", observacao: "" }); }}
-                    className="flex-1 bg-green-50 text-green-700 py-1.5 rounded-lg text-xs font-medium hover:bg-green-100 transition-colors"
-                  >
-                    + Entrada
-                  </button>
-                  <button
-                    onClick={() => { setModalMov(p); setNovaMov({ tipo: "SAIDA", quantidade: "", observacao: "" }); }}
-                    className="flex-1 bg-red-50 text-red-600 py-1.5 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors"
-                  >
-                    − Saída
-                  </button>
-                  <button
-                    onClick={() => excluirProduto(p.id)}
-                    className="bg-gray-100 text-gray-400 px-3 py-1.5 rounded-lg text-xs hover:bg-gray-200 transition-colors"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
         {aba === "historico" && (
           <div className="space-y-2">
             {movimentacoes.length === 0 && (
-              <div className="text-center text-gray-400 py-12 text-sm">
+              <div className="text-center py-12 text-sm" style={{ color: MUTED }}>
                 Nenhuma movimentação registrada.
               </div>
             )}
             {movimentacoes.map((m) => (
-              <div key={m.id} className="bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-100 flex items-center gap-3">
-                <span className={`text-lg ${m.tipo === "ENTRADA" ? "text-green-600" : "text-red-500"}`}>
+              <div key={m.id} className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+                <span className="text-lg" style={{ color: m.tipo === "ENTRADA" ? GREEN : RED }}>
                   {m.tipo === "ENTRADA" ? "↑" : "↓"}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-gray-900 truncate">{m.produto.nome}</p>
-                  {m.observacao && <p className="text-xs text-gray-400 truncate">{m.observacao}</p>}
+                  <p className="font-medium text-sm truncate" style={{ color: TEXT }}>{m.produto.nome}</p>
+                  {m.observacao && <p className="text-xs truncate" style={{ color: MUTED }}>{m.observacao}</p>}
                 </div>
                 <div className="text-right shrink-0">
-                  <p className={`font-bold text-sm ${m.tipo === "ENTRADA" ? "text-green-600" : "text-red-500"}`}>
+                  <p className="font-bold text-sm" style={{ color: m.tipo === "ENTRADA" ? GREEN : RED }}>
                     {m.tipo === "ENTRADA" ? "+" : "−"}{m.quantidade} {m.produto.unidade}
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs" style={{ color: MUTED }}>
                     {new Date(m.criadoEm).toLocaleDateString("pt-BR")}
                   </p>
                 </div>
@@ -263,14 +313,15 @@ export default function Home() {
 
       {/* Modal: Novo Produto */}
       {modalNovo && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl">
-            <h2 className="text-lg font-bold mb-4 text-gray-900">Novo Produto</h2>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.8)" }}>
+          <div className="w-full max-w-md rounded-2xl p-6 shadow-xl overflow-y-auto" style={{ background: CARD, border: `1px solid ${BORDER}`, maxHeight: "90vh" }}>
+            <h2 className="text-lg font-bold mb-4" style={{ color: TEXT }}>Novo Produto</h2>
             <form onSubmit={criarProduto} className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Nome do produto</label>
+                <label className="block text-xs font-medium mb-1" style={{ color: MUTED }}>Nome do produto</label>
                 <input
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-black focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none"
+                  style={iStyle}
                   placeholder="Ex: Milho, Ração, Fertilizante..."
                   value={novoProduto.nome}
                   onChange={(e) => setNovoProduto({ ...novoProduto, nome: e.target.value })}
@@ -280,12 +331,9 @@ export default function Home() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Unidade</label>
-                  <select
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-black focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={novoProduto.unidade}
-                    onChange={(e) => setNovoProduto({ ...novoProduto, unidade: e.target.value })}
-                  >
+                  <label className="block text-xs font-medium mb-1" style={{ color: MUTED }}>Unidade</label>
+                  <select className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none" style={iStyle}
+                    value={novoProduto.unidade} onChange={(e) => setNovoProduto({ ...novoProduto, unidade: e.target.value })}>
                     <option value="kg">kg</option>
                     <option value="ton">ton</option>
                     <option value="L">L</option>
@@ -295,12 +343,9 @@ export default function Home() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Categoria</label>
-                  <select
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-black focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={novoProduto.categoria}
-                    onChange={(e) => setNovoProduto({ ...novoProduto, categoria: e.target.value })}
-                  >
+                  <label className="block text-xs font-medium mb-1" style={{ color: MUTED }}>Categoria</label>
+                  <select className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none" style={iStyle}
+                    value={novoProduto.categoria} onChange={(e) => setNovoProduto({ ...novoProduto, categoria: e.target.value })}>
                     <option>Geral</option>
                     <option>Ração</option>
                     <option>Grãos</option>
@@ -312,31 +357,32 @@ export default function Home() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Quantidade inicial (opcional)</label>
+                <label className="block text-xs font-medium mb-1" style={{ color: MUTED }}>Fazenda</label>
+                <select className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none" style={iStyle}
+                  value={novoProduto.fazenda} onChange={(e) => setNovoProduto({ ...novoProduto, fazenda: e.target.value })}>
+                  {FAZENDAS.map(f => <option key={f}>{f}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1" style={{ color: MUTED }}>Quantidade inicial (opcional)</label>
                 <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-black focus:outline-none focus:ring-2 focus:ring-green-500"
+                  type="number" min="0" step="0.01"
+                  className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none"
+                  style={iStyle}
                   placeholder="0"
                   value={novoProduto.quantidadeInicial}
                   onChange={(e) => setNovoProduto({ ...novoProduto, quantidadeInicial: e.target.value })}
                 />
               </div>
-              {erro && <p className="text-red-500 text-xs">{erro}</p>}
+              {erro && <p className="text-xs" style={{ color: RED }}>{erro}</p>}
               <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => { setModalNovo(false); setErro(""); }}
-                  className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium"
-                >
+                <button type="button" onClick={() => { setModalNovo(false); setErro(""); }}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-medium" style={{ background: BORDER, color: MUTED }}>
                   Cancelar
                 </button>
-                <button
-                  type="submit"
-                  disabled={carregando}
-                  className="flex-1 bg-green-700 text-white py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60"
-                >
+                <button type="submit" disabled={carregando}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60"
+                  style={{ background: GREEN_DIM, color: GREEN, border: `1px solid ${GREEN}` }}>
                   {carregando ? "Salvando..." : "Cadastrar"}
                 </button>
               </div>
@@ -347,78 +393,61 @@ export default function Home() {
 
       {/* Modal: Movimentação */}
       {modalMov && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl">
-            <h2 className="text-lg font-bold mb-1 text-gray-900">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.8)" }}>
+          <div className="w-full max-w-md rounded-2xl p-6 shadow-xl" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+            <h2 className="text-lg font-bold mb-1" style={{ color: TEXT }}>
               {novaMov.tipo === "ENTRADA" ? "Entrada de estoque" : "Saída de estoque"}
             </h2>
-            <p className="text-sm text-gray-500 mb-4">{modalMov.nome}</p>
+            <p className="text-sm mb-4" style={{ color: MUTED }}>{modalMov.nome}</p>
             <form onSubmit={registrarMovimentacao} className="space-y-3">
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setNovaMov({ ...novaMov, tipo: "ENTRADA" })}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                    novaMov.tipo === "ENTRADA"
-                      ? "bg-green-600 text-white border-green-600"
-                      : "border-gray-200 text-gray-500"
-                  }`}
-                >
+                <button type="button" onClick={() => setNovaMov({ ...novaMov, tipo: "ENTRADA" })}
+                  className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
+                  style={{ background: novaMov.tipo === "ENTRADA" ? GREEN_DIM : "transparent", color: novaMov.tipo === "ENTRADA" ? GREEN : MUTED, borderColor: novaMov.tipo === "ENTRADA" ? GREEN : BORDER }}>
                   + Entrada
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setNovaMov({ ...novaMov, tipo: "SAIDA" })}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                    novaMov.tipo === "SAIDA"
-                      ? "bg-red-500 text-white border-red-500"
-                      : "border-gray-200 text-gray-500"
-                  }`}
-                >
+                <button type="button" onClick={() => setNovaMov({ ...novaMov, tipo: "SAIDA" })}
+                  className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
+                  style={{ background: novaMov.tipo === "SAIDA" ? RED_DIM : "transparent", color: novaMov.tipo === "SAIDA" ? RED : MUTED, borderColor: novaMov.tipo === "SAIDA" ? RED : BORDER }}>
                   − Saída
                 </button>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium mb-1" style={{ color: MUTED }}>
                   Quantidade ({modalMov.unidade})
                 </label>
-                <input
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-black focus:outline-none focus:ring-2 focus:ring-green-500"
+                <input type="number" min="0.01" step="0.01"
+                  className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none"
+                  style={iStyle}
                   placeholder="0"
                   value={novaMov.quantidade}
                   onChange={(e) => setNovaMov({ ...novaMov, quantidade: e.target.value })}
-                  required
-                  autoFocus
+                  required autoFocus
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Observação (opcional)</label>
+                <label className="block text-xs font-medium mb-1" style={{ color: MUTED }}>Observação (opcional)</label>
                 <input
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-black focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none"
+                  style={iStyle}
                   placeholder="Ex: Compra fornecedor X..."
                   value={novaMov.observacao}
                   onChange={(e) => setNovaMov({ ...novaMov, observacao: e.target.value })}
                 />
               </div>
-              {erro && <p className="text-red-500 text-xs">{erro}</p>}
+              {erro && <p className="text-xs" style={{ color: RED }}>{erro}</p>}
               <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => { setModalMov(null); setErro(""); }}
-                  className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium"
-                >
+                <button type="button" onClick={() => { setModalMov(null); setErro(""); }}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-medium" style={{ background: BORDER, color: MUTED }}>
                   Cancelar
                 </button>
-                <button
-                  type="submit"
-                  disabled={carregando}
-                  className={`flex-1 text-white py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60 ${
-                    novaMov.tipo === "ENTRADA" ? "bg-green-700" : "bg-red-500"
-                  }`}
-                >
+                <button type="submit" disabled={carregando}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60"
+                  style={{
+                    background: novaMov.tipo === "ENTRADA" ? GREEN_DIM : RED_DIM,
+                    color: novaMov.tipo === "ENTRADA" ? GREEN : RED,
+                    border: `1px solid ${novaMov.tipo === "ENTRADA" ? GREEN : RED}`,
+                  }}>
                   {carregando ? "Salvando..." : "Registrar"}
                 </button>
               </div>

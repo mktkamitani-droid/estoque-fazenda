@@ -24,6 +24,7 @@ export async function initDb() {
       criado_em TIMESTAMP NOT NULL DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE produtos ADD COLUMN IF NOT EXISTS fazenda TEXT NOT NULL DEFAULT 'Tinguara'`;
   await sql`
     CREATE TABLE IF NOT EXISTS movimentacoes (
       id SERIAL PRIMARY KEY,

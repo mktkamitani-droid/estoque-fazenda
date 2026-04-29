@@ -13,6 +13,7 @@ model Produto {
   unidade       String
   quantidade    Float           @default(0)
   categoria     String          @default("Geral")
+  fazenda       String          @default("Tinguara")
   criadoEm      DateTime        @default(now())
   movimentacoes Movimentacao[]
 }
