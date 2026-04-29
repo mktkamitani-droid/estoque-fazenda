@@ -31,7 +31,7 @@ type Movimentacao = {
 };
 
 const FAZENDAS = ["Dom", "Tinguara", "Santa Rosa", "Santa Rita", "Copasul"];
-const ORDEM_CATEGORIAS = ["Grãos", "Ração", "Inseticida", "Herbicida", "Fungicida", "Medicamentos", "Geral"];
+const ORDEM_CATEGORIAS = ["Grãos", "Semente", "Ração", "Adubo", "Inseticida", "Herbicida", "Fungicida", "Medicamentos", "Diesel", "Geral"];
 const CATEGORIAS_COM_BULA = ["Inseticida", "Herbicida", "Fungicida", "Medicamentos"];
 
 const iStyle = {
@@ -357,13 +357,16 @@ export default function Home() {
                   <label className="block text-xs font-medium mb-1" style={{ color: MUTED }}>Categoria</label>
                   <select className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none" style={iStyle}
                     value={novoProduto.categoria} onChange={(e) => setNovoProduto({ ...novoProduto, categoria: e.target.value })}>
-                    <option>Geral</option>
-                    <option>Ração</option>
                     <option>Grãos</option>
+                    <option>Semente</option>
+                    <option>Ração</option>
+                    <option>Adubo</option>
                     <option>Inseticida</option>
                     <option>Herbicida</option>
                     <option>Fungicida</option>
                     <option>Medicamentos</option>
+                    <option>Diesel</option>
+                    <option>Geral</option>
                   </select>
                 </div>
               </div>
