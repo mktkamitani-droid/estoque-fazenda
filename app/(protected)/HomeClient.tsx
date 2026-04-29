@@ -29,7 +29,7 @@ type Movimentacao = {
   produto: { nome: string; unidade: string };
 };
 
-const FAZENDAS = ["Tinguara", "Dom", "Santa Rosa", "Santa Rita", "Copasul"];
+const FAZENDAS = ["Dom", "Tinguara", "Santa Rosa", "Santa Rita", "Copasul"];
 const ORDEM_CATEGORIAS = ["Grãos", "Ração", "Inseticida", "Herbicida", "Fungicida", "Medicamentos", "Geral"];
 
 const iStyle = {
