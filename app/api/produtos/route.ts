@@ -17,13 +17,13 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     await initDb();
-    const { nome, unidade, categoria, fazenda } = await req.json();
+    const { nome, unidade, categoria, fazenda, recomendacao } = await req.json();
     if (!nome || !unidade) {
       return NextResponse.json({ error: "Nome e unidade são obrigatórios" }, { status: 400 });
     }
     const [produto] = await sql`
-      INSERT INTO produtos (nome, unidade, categoria, fazenda)
-      VALUES (${nome}, ${unidade}, ${categoria || "Geral"}, ${fazenda || "Tinguara"})
+      INSERT INTO produtos (nome, unidade, categoria, fazenda, recomendacao)
+      VALUES (${nome}, ${unidade}, ${categoria || "Geral"}, ${fazenda || "Tinguara"}, ${recomendacao || ""})
       RETURNING *
     `;
     return NextResponse.json(produto, { status: 201 });

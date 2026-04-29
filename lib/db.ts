@@ -37,6 +37,21 @@ export async function initDb() {
     )
   `;
   await sql`ALTER TABLE movimentacoes ADD COLUMN IF NOT EXISTS responsavel TEXT NOT NULL DEFAULT ''`;
+  await sql`ALTER TABLE produtos ADD COLUMN IF NOT EXISTS recomendacao TEXT NOT NULL DEFAULT ''`;
+  await sql`
+    CREATE TABLE IF NOT EXISTS colheitas (
+      id SERIAL PRIMARY KEY,
+      fazenda TEXT NOT NULL,
+      produto TEXT NOT NULL,
+      quantidade REAL NOT NULL,
+      unidade TEXT NOT NULL DEFAULT 'sc',
+      destino TEXT NOT NULL DEFAULT '',
+      placa TEXT NOT NULL DEFAULT '',
+      observacao TEXT NOT NULL DEFAULT '',
+      data DATE NOT NULL DEFAULT CURRENT_DATE,
+      criado_em TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `;
   await sql`
     CREATE TABLE IF NOT EXISTS fazendas (
       id SERIAL PRIMARY KEY,
@@ -45,8 +60,19 @@ export async function initDb() {
     )
   `;
   await sql`
-    INSERT INTO fazendas (nome) VALUES ('Dom'), ('Tinguara'), ('Santa Rosa'), ('Santa Rita'), ('Copasul')
+    INSERT INTO fazendas (nome) VALUES ('Dom'), ('Tinguara'), ('Santa Rosa'), ('Santa Rita')
     ON CONFLICT (nome) DO NOTHING
+  `;
+  await sql`DELETE FROM fazendas WHERE nome = 'Copasul'
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS usuarios (
+      id SERIAL PRIMARY KEY,
+      usuario TEXT NOT NULL UNIQUE,
+      senha_hash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'user',
+      criado_em TIMESTAMP NOT NULL DEFAULT NOW()
+    )
   `;
 }
 
