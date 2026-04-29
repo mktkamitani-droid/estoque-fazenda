@@ -234,43 +234,28 @@ export default function Home() {
                 .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
               return (
                 <div key={cat}>
-                  <p className="text-xs font-bold uppercase tracking-wider mb-2 px-1" style={{ color: MUTED }}>
-                    {cat}
-                  </p>
-                  <div className="space-y-2">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="h-px flex-1" style={{ background: BORDER }} />
+                    <span className="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ color: GREEN, background: GREEN_DIM }}>
+                      {cat}
+                    </span>
+                    <div className="h-px flex-1" style={{ background: BORDER }} />
+                  </div>
+                  <div className="space-y-1">
                     {prods.map(p => (
-                      <div key={p.id} className="rounded-xl p-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-                        <div className="flex items-start justify-between">
-                          <p className="font-semibold" style={{ color: TEXT }}>{p.nome}</p>
-                          <div className="text-right">
-                            <p className="text-xl font-bold" style={{ color: p.quantidade <= 0 ? RED : GREEN }}>
-                              {p.quantidade % 1 === 0 ? p.quantidade : p.quantidade.toFixed(2)}
-                            </p>
-                            <p className="text-xs" style={{ color: MUTED }}>{p.unidade}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2 mt-3">
-                          <button
-                            onClick={() => { setModalMov(p); setNovaMov({ tipo: "ENTRADA", quantidade: "", observacao: "" }); }}
-                            className="flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                            style={{ background: GREEN_DIM, color: GREEN }}
-                          >
-                            + Entrada
-                          </button>
-                          <button
-                            onClick={() => { setModalMov(p); setNovaMov({ tipo: "SAIDA", quantidade: "", observacao: "" }); }}
-                            className="flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                            style={{ background: RED_DIM, color: RED }}
-                          >
-                            − Saída
-                          </button>
-                          <button
-                            onClick={() => excluirProduto(p.id)}
-                            className="px-3 py-1.5 rounded-lg text-xs transition-colors"
-                            style={{ background: BORDER, color: MUTED }}
-                          >
-                            ✕
-                          </button>
+                      <div key={p.id} className="rounded-lg px-3 py-2 flex items-center gap-2" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+                        <p className="font-medium text-sm flex-1 min-w-0 truncate" style={{ color: TEXT }}>{p.nome}</p>
+                        <span className="font-bold text-sm shrink-0" style={{ color: p.quantidade <= 0 ? RED : GREEN }}>
+                          {p.quantidade % 1 === 0 ? p.quantidade : p.quantidade.toFixed(2)}
+                          <span className="text-xs font-normal ml-1" style={{ color: MUTED }}>{p.unidade}</span>
+                        </span>
+                        <div className="flex gap-1 shrink-0">
+                          <button onClick={() => { setModalMov(p); setNovaMov({ tipo: "ENTRADA", quantidade: "", observacao: "" }); }}
+                            className="px-2 py-1 rounded-md text-xs font-bold" style={{ background: GREEN_DIM, color: GREEN }}>+</button>
+                          <button onClick={() => { setModalMov(p); setNovaMov({ tipo: "SAIDA", quantidade: "", observacao: "" }); }}
+                            className="px-2 py-1 rounded-md text-xs font-bold" style={{ background: RED_DIM, color: RED }}>−</button>
+                          <button onClick={() => excluirProduto(p.id)}
+                            className="px-2 py-1 rounded-md text-xs" style={{ background: BORDER, color: MUTED }}>✕</button>
                         </div>
                       </div>
                     ))}
