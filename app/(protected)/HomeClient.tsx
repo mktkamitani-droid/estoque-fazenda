@@ -2,29 +2,29 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-const BG      = "#060C06";
-const SURFACE = "#0C180C";
-const LIFT    = "#132013";
-const LINE    = "#1C3020";
-const LINE2   = "#2C4A32";
-const LINE3   = "#3A6642";
+const BG      = "#070D07";
+const SURFACE = "#0F1A0F";
+const LIFT    = "#172417";
+const LINE    = "#1F2F1F";
+const LINE2   = "#2C4830";
+const LINE3   = "#3C6244";
 
 const GREEN   = "#4ADE80";
-const G_DIM   = "#052E16";
-const G_MID   = "#166534";
+const G_DIM   = "#081F10";
+const G_MID   = "#155228";
 
-const GOLD    = "#FCD34D";
-const GOLD_DIM= "#3B1B00";
+const GOLD    = "#F59E0B";
+const GOLD_DIM= "#261400";
 
-const RED     = "#FCA5A5";
-const RED_DIM = "#450A0A";
+const RED     = "#F87171";
+const RED_DIM = "#3C0A0A";
 
-const BLUE    = "#93C5FD";
-const BLUE_DIM= "#1E3A5F";
+const BLUE    = "#60A5FA";
+const BLUE_DIM= "#0E2A50";
 
-const TEXT    = "#F0FDF4";
+const TEXT    = "#F0FFF0";
 const TEXT2   = "#86EFAC";
-const MUTED   = "#6B7280";
+const MUTED   = "#527A5C";
 
 const CAT_ICON: Record<string, string> = {
   "Grãos": "🌾", "Semente": "🌱", "Ração": "🥜", "Adubo": "♻️",
@@ -38,7 +38,7 @@ const ORDEM_CATEGORIAS = [
 ];
 const CATEGORIAS_COM_BULA = ["Inseticida","Herbicida","Fungicida","Medicamentos"];
 
-const iStyle = { background: SURFACE, color: TEXT, border: `1px solid ${LINE2}` };
+const iStyle = { background: SURFACE, color: TEXT, border: `1px solid ${LINE2}`, fontSize: 16 };
 
 type Aba = "dashboard" | "estoque" | "historico" | "colheitas" | "chuvas" | "usuarios";
 
@@ -322,45 +322,45 @@ export default function Home() {
       {/* ── Header ─────────────────────────────────────────────── */}
       <header style={{
         position:"sticky", top:0, zIndex:20,
-        height:52, padding:"0 16px",
+        height:58, padding:"0 16px",
         background: SURFACE, borderBottom:`1px solid ${LINE}`,
         display:"flex", alignItems:"center", justifyContent:"space-between",
       }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <button onClick={() => mudarAba("dashboard")} style={{
-            width:32, height:32, borderRadius:8, flexShrink:0,
+            width:36, height:36, borderRadius:8, flexShrink:0,
             background:`linear-gradient(135deg, ${G_MID}, ${GREEN})`,
             display:"flex", alignItems:"center", justifyContent:"center",
-            fontWeight:800, fontSize:11, color:"#050A05", border:"none", cursor:"pointer",
+            fontWeight:800, fontSize:12, color:"#050A05", border:"none", cursor:"pointer",
           }}>KA</button>
-          <span style={{ fontSize:14, fontWeight:600, color: TEXT }}>{ABA_LABEL[aba]}</span>
+          <span style={{ fontSize:16, fontWeight:600, color: TEXT }}>{ABA_LABEL[aba]}</span>
         </div>
 
         <div style={{ display:"flex", gap:8, alignItems:"center" }}>
           {aba === "estoque" && (
             <button onClick={() => { setFormProduto({ ...novoProdutoDefault, fazenda }); setModalNovo(true); }} style={{
-              padding:"0 14px", height:32, borderRadius:8, fontSize:12, fontWeight:600,
+              padding:"0 16px", height:36, borderRadius:8, fontSize:14, fontWeight:600,
               background: G_DIM, color: GREEN, border:`1px solid ${LINE3}`,
               cursor:"pointer",
             }}>+ Produto</button>
           )}
           {aba === "colheitas" && (
             <button onClick={() => { setFormCarga(c => ({ ...c, fazenda: fazenda || "" })); setModalCarga(true); }} style={{
-              padding:"0 14px", height:32, borderRadius:8, fontSize:12, fontWeight:600,
+              padding:"0 16px", height:36, borderRadius:8, fontSize:14, fontWeight:600,
               background: G_DIM, color: GREEN, border:`1px solid ${LINE3}`,
               cursor:"pointer",
             }}>+ Carga</button>
           )}
           {aba === "chuvas" && (
             <button onClick={() => { setFormChuva({ ...novaChuvaDefault, fazenda: fazenda || "" }); setModalChuva(true); }} style={{
-              padding:"0 14px", height:32, borderRadius:8, fontSize:12, fontWeight:600,
+              padding:"0 16px", height:36, borderRadius:8, fontSize:14, fontWeight:600,
               background: G_DIM, color: GREEN, border:`1px solid ${LINE3}`,
               cursor:"pointer",
             }}>+ Chuva</button>
           )}
           {aba === "dashboard" && (
             <button onClick={loadDashboard} style={{
-              padding:"0 12px", height:32, borderRadius:8, fontSize:12,
+              padding:"0 14px", height:36, borderRadius:8, fontSize:16,
               background:"transparent", color: MUTED, border:`1px solid ${LINE2}`,
               cursor:"pointer",
             }}>↺</button>
@@ -384,14 +384,14 @@ export default function Home() {
                   boxShadow:"0 8px 32px rgba(0,0,0,0.5)",
                 }}>
                   {nomeResp && (
-                    <p style={{ fontSize:11, color: MUTED, padding:"4px 10px 8px", borderBottom:`1px solid ${LINE}`, marginBottom:4 }}>
+                    <p style={{ fontSize:13, color: MUTED, padding:"4px 10px 8px", borderBottom:`1px solid ${LINE}`, marginBottom:4 }}>
                       {nomeResp}
                     </p>
                   )}
                   <button onClick={() => { sair(); setMenuAberto(false); }} style={{
-                    width:"100%", textAlign:"left", padding:"8px 10px",
+                    width:"100%", textAlign:"left", padding:"10px 10px",
                     background:"transparent", border:"none", color: RED,
-                    fontSize:13, cursor:"pointer", borderRadius:6,
+                    fontSize:15, cursor:"pointer", borderRadius:6,
                   }}>Sair da conta →</button>
                 </div>
               </>
@@ -401,12 +401,12 @@ export default function Home() {
       </header>
 
       {/* ── Content ────────────────────────────────────────────── */}
-      <div style={{ flex:1, padding:"16px 16px 80px", maxWidth:720, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
+      <div style={{ flex:1, padding:"16px 16px 92px", maxWidth:720, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
 
         {/* ── DASHBOARD ─────────────────────────────────────── */}
         {aba === "dashboard" && (
           <div>
-            <p style={{ fontSize:11, color: MUTED, marginBottom:16 }}>
+            <p style={{ fontSize:13, color: MUTED, marginBottom:16 }}>
               {new Date().toLocaleDateString("pt-BR", { weekday:"long", day:"2-digit", month:"long", year:"numeric" })}
             </p>
 
@@ -439,28 +439,28 @@ export default function Home() {
                     <div style={{ padding:"12px 14px 10px", display:"flex", alignItems:"center", gap:10 }}>
                       <div style={{ flex:1, minWidth:0 }}>
                         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                          <p style={{ fontSize:15, fontWeight:700, color: TEXT }}>{faz.nome}</p>
+                          <p style={{ fontSize:17, fontWeight:700, color: TEXT }}>{faz.nome}</p>
                           {faz.sem_estoque > 0 && (
-                            <span style={{ fontSize:10, color: statusColor, background: statusColor === RED ? RED_DIM : GOLD_DIM, padding:"1px 7px", borderRadius:99, fontWeight:700 }}>
+                            <span style={{ fontSize:11, color: statusColor, background: statusColor === RED ? RED_DIM : GOLD_DIM, padding:"2px 8px", borderRadius:99, fontWeight:700 }}>
                               ⚠ {faz.sem_estoque}
                             </span>
                           )}
                         </div>
                         {/* Progress bar */}
                         <div style={{ marginTop:6 }}>
-                          <div style={{ height:3, background: LINE2, borderRadius:99, overflow:"hidden" }}>
+                          <div style={{ height:4, background: LINE2, borderRadius:99, overflow:"hidden" }}>
                             <div style={{ height:"100%", width:`${pct}%`, background: statusColor, borderRadius:99 }} />
                           </div>
                           <div style={{ display:"flex", justifyContent:"space-between", marginTop:3 }}>
-                            <span style={{ fontSize:10, color: MUTED }}>{faz.total} produtos</span>
-                            <span style={{ fontSize:10, fontWeight:600, color: statusColor }}>{pct}% em estoque</span>
+                            <span style={{ fontSize:12, color: MUTED }}>{faz.total} produtos</span>
+                            <span style={{ fontSize:12, fontWeight:600, color: statusColor }}>{pct}% em estoque</span>
                           </div>
                         </div>
                       </div>
                       <button
                         onClick={() => { setFazenda(faz.nome); mudarAba("estoque"); }}
                         style={{
-                          padding:"6px 12px", borderRadius:8, fontSize:11, fontWeight:600,
+                          padding:"8px 14px", borderRadius:8, fontSize:13, fontWeight:600,
                           background: G_DIM, color: GREEN, border:`1px solid ${LINE3}`,
                           cursor:"pointer", whiteSpace:"nowrap", flexShrink:0,
                         }}
@@ -472,7 +472,7 @@ export default function Home() {
                       <div style={{ padding:"0 14px 10px", display:"flex", flexWrap:"wrap", gap:4 }}>
                         {topCats.map(cat => (
                           <span key={cat.categoria} style={{
-                            fontSize:11, padding:"2px 8px", borderRadius:99,
+                            fontSize:13, padding:"3px 10px", borderRadius:99,
                             background: LIFT, color: cat.sem_estoque > 0 ? GOLD : TEXT2,
                             border:`1px solid ${cat.sem_estoque > 0 ? GOLD_DIM : LINE}`,
                           }}>
@@ -485,30 +485,30 @@ export default function Home() {
                     {/* Bottom panels */}
                     <div style={{ display:"grid", gridTemplateColumns: faz.colheitas_mes.length > 0 ? "1fr 1fr" : "1fr", gap:0, borderTop:`1px solid ${LINE}` }}>
                       <div style={{ padding:"10px 14px", borderRight: faz.colheitas_mes.length > 0 ? `1px solid ${LINE}` : "none" }}>
-                        <p style={{ fontSize:10, textTransform:"uppercase", letterSpacing:"0.07em", color: MUTED, marginBottom:4 }}>Última mov.</p>
+                        <p style={{ fontSize:12, textTransform:"uppercase", letterSpacing:"0.07em", color: MUTED, marginBottom:4 }}>Última mov.</p>
                         {faz.ultima_mov ? (
                           <>
-                            <p style={{ fontSize:12, fontWeight:600, color: faz.ultima_mov.tipo === "ENTRADA" ? GREEN : RED }}>
+                            <p style={{ fontSize:14, fontWeight:600, color: faz.ultima_mov.tipo === "ENTRADA" ? GREEN : RED }}>
                               {faz.ultima_mov.tipo === "ENTRADA" ? "↑" : "↓"} {fmtQty(faz.ultima_mov.quantidade)} {faz.ultima_mov.unidade}
                             </p>
-                            <p style={{ fontSize:11, color: TEXT2, marginTop:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{faz.ultima_mov.produto}</p>
-                            <p style={{ fontSize:10, color: MUTED, marginTop:1 }}>{new Date(faz.ultima_mov.criado_em).toLocaleDateString("pt-BR")}</p>
+                            <p style={{ fontSize:13, color: TEXT2, marginTop:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{faz.ultima_mov.produto}</p>
+                            <p style={{ fontSize:12, color: MUTED, marginTop:1 }}>{new Date(faz.ultima_mov.criado_em).toLocaleDateString("pt-BR")}</p>
                           </>
                         ) : (
-                          <p style={{ fontSize:11, color: MUTED }}>Nenhuma ainda</p>
+                          <p style={{ fontSize:13, color: MUTED }}>Nenhuma ainda</p>
                         )}
                       </div>
 
                       {faz.colheitas_mes.length > 0 && (
                         <div style={{ padding:"10px 14px" }}>
-                          <p style={{ fontSize:10, textTransform:"uppercase", letterSpacing:"0.07em", color: MUTED, marginBottom:4 }}>
+                          <p style={{ fontSize:12, textTransform:"uppercase", letterSpacing:"0.07em", color: MUTED, marginBottom:4 }}>
                             Colheitas {new Date().toLocaleDateString("pt-BR", { month:"short" }).replace(".","").toUpperCase()}
                           </p>
                           {faz.colheitas_mes.slice(0,3).map(c => (
                             <div key={c.produto} style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:2 }}>
-                              <span style={{ fontSize:11, color: TEXT2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", flex:1 }}>{c.produto}</span>
-                              <span style={{ fontSize:11, fontWeight:700, color: GREEN, marginLeft:8, fontFamily:"ui-monospace,monospace", flexShrink:0 }}>
-                                {fmtQty(c.total)}<span style={{ fontSize:10, fontWeight:400, color: MUTED }}> {c.unidade}</span>
+                              <span style={{ fontSize:13, color: TEXT2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", flex:1 }}>{c.produto}</span>
+                              <span style={{ fontSize:13, fontWeight:700, color: GREEN, marginLeft:8, fontFamily:"ui-monospace,monospace", flexShrink:0 }}>
+                                {fmtQty(c.total)}<span style={{ fontSize:11, fontWeight:400, color: MUTED }}> {c.unidade}</span>
                               </span>
                             </div>
                           ))}
@@ -530,20 +530,20 @@ export default function Home() {
             {/* Stats */}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:14 }}>
               <div style={{ background: SURFACE, border:`1px solid ${LINE}`, borderRadius:10, padding:"12px 14px" }}>
-                <p style={{ fontSize:10, textTransform:"uppercase", letterSpacing:"0.08em", color: MUTED }}>Produtos</p>
-                <p style={{ fontSize:26, fontWeight:800, color: GREEN, marginTop:2, fontVariantNumeric:"tabular-nums" }}>{totalItens}</p>
+                <p style={{ fontSize:12, textTransform:"uppercase", letterSpacing:"0.08em", color: MUTED }}>Produtos</p>
+                <p style={{ fontSize:30, fontWeight:800, color: GREEN, marginTop:2, fontVariantNumeric:"tabular-nums" }}>{totalItens}</p>
               </div>
               <div style={{ background: SURFACE, border:`1px solid ${semEstoque > 0 ? GOLD_DIM : LINE}`, borderRadius:10, padding:"12px 14px" }}>
-                <p style={{ fontSize:10, textTransform:"uppercase", letterSpacing:"0.08em", color: MUTED }}>Sem estoque</p>
-                <p style={{ fontSize:26, fontWeight:800, color: semEstoque > 0 ? GOLD : MUTED, marginTop:2, fontVariantNumeric:"tabular-nums" }}>{semEstoque}</p>
+                <p style={{ fontSize:12, textTransform:"uppercase", letterSpacing:"0.08em", color: MUTED }}>Sem estoque</p>
+                <p style={{ fontSize:30, fontWeight:800, color: semEstoque > 0 ? GOLD : MUTED, marginTop:2, fontVariantNumeric:"tabular-nums" }}>{semEstoque}</p>
               </div>
             </div>
 
             {/* Search */}
             <div style={{ position:"relative", marginBottom:12 }}>
-              <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color: MUTED, fontSize:13, pointerEvents:"none" }}>⌕</span>
+              <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color: MUTED, fontSize:15, pointerEvents:"none" }}>⌕</span>
               <input
-                style={{ ...iStyle, width:"100%", borderRadius:10, padding:"9px 12px 9px 34px", fontSize:13, boxSizing:"border-box", outline:"none" }}
+                style={{ ...iStyle, width:"100%", borderRadius:10, padding:"11px 12px 11px 36px", fontSize:15, boxSizing:"border-box", outline:"none" }}
                 placeholder="Buscar produto..."
                 value={busca}
                 onChange={e => setBusca(e.target.value)}
@@ -575,10 +575,10 @@ export default function Home() {
                     }}
                   >
                     <span style={{ fontSize:14 }}>{CAT_ICON[cat] || "📦"}</span>
-                    <span style={{ fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.08em", color: TEXT2 }}>{cat}</span>
-                    <span style={{ fontSize:11, color: MUTED, background: LIFT, padding:"0 6px", borderRadius:99 }}>{prods.length}</span>
+                    <span style={{ fontSize:13, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.08em", color: TEXT2 }}>{cat}</span>
+                    <span style={{ fontSize:13, color: MUTED, background: LIFT, padding:"0 7px", borderRadius:99 }}>{prods.length}</span>
                     {emFalta > 0 && (
-                      <span style={{ fontSize:10, fontWeight:700, color: GOLD, background: GOLD_DIM, padding:"0 6px", borderRadius:99 }}>⚠ {emFalta}</span>
+                      <span style={{ fontSize:12, fontWeight:700, color: GOLD, background: GOLD_DIM, padding:"0 7px", borderRadius:99 }}>⚠ {emFalta}</span>
                     )}
                     <div style={{ flex:1, height:1, background: LINE, marginLeft:4 }} />
                     <span style={{ fontSize:10, color: MUTED }}>{aberta ? "▲" : "▼"}</span>
@@ -594,31 +594,31 @@ export default function Home() {
                           borderRadius:"0 8px 8px 0", padding:"10px 12px",
                         }}>
                           <div style={{ flex:1, minWidth:0 }}>
-                            <p style={{ fontSize:13, fontWeight:500, color: TEXT, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.nome}</p>
+                            <p style={{ fontSize:15, fontWeight:500, color: TEXT, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.nome}</p>
                             {p.recomendacao && (
-                              <p style={{ fontSize:11, color: MUTED, marginTop:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.recomendacao}</p>
+                              <p style={{ fontSize:13, color: MUTED, marginTop:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.recomendacao}</p>
                             )}
                           </div>
 
-                          <span style={{ fontFamily:"ui-monospace,monospace", fontSize:13, fontWeight:700, color: qtyColor(p.quantidade), flexShrink:0 }}>
-                            {fmtQty(p.quantidade)}<span style={{ fontSize:11, fontWeight:400, color: MUTED, marginLeft:3 }}>{p.unidade}</span>
+                          <span style={{ fontFamily:"ui-monospace,monospace", fontSize:15, fontWeight:700, color: qtyColor(p.quantidade), flexShrink:0 }}>
+                            {fmtQty(p.quantidade)}<span style={{ fontSize:13, fontWeight:400, color: MUTED, marginLeft:3 }}>{p.unidade}</span>
                           </span>
 
                           <div style={{ display:"flex", gap:4, flexShrink:0 }}>
                             {CATEGORIAS_COM_BULA.includes(p.categoria) && (
                               <a href={`https://www.google.com/search?q=${encodeURIComponent(p.nome+" bula")}&as_sitesearch=gov.br`}
                                 target="_blank" rel="noopener noreferrer"
-                                style={{ padding:"4px 8px", borderRadius:6, fontSize:11, background: BLUE_DIM, color: BLUE, textDecoration:"none" }}
+                                style={{ padding:"6px 10px", borderRadius:6, fontSize:13, background: BLUE_DIM, color: BLUE, textDecoration:"none" }}
                                 title="Ver bula">📋</a>
                             )}
                             <button onClick={() => { setModalMov(p); setFormMov({ tipo:"ENTRADA", quantidade:"", observacao:"", responsavel: nomeResp }); }}
-                              style={{ padding:"4px 8px", borderRadius:6, fontSize:12, fontWeight:700, background: G_DIM, color: GREEN, border:"none", cursor:"pointer" }}>+</button>
+                              style={{ padding:"6px 10px", borderRadius:6, fontSize:14, fontWeight:700, background: G_DIM, color: GREEN, border:"none", cursor:"pointer" }}>+</button>
                             <button onClick={() => { setModalMov(p); setFormMov({ tipo:"SAIDA", quantidade:"", observacao:"", responsavel: nomeResp }); }}
-                              style={{ padding:"4px 8px", borderRadius:6, fontSize:12, fontWeight:700, background: RED_DIM, color: RED, border:"none", cursor:"pointer" }}>−</button>
+                              style={{ padding:"6px 10px", borderRadius:6, fontSize:14, fontWeight:700, background: RED_DIM, color: RED, border:"none", cursor:"pointer" }}>−</button>
                             <button onClick={() => { setFormEdit({ nome:p.nome, unidade:p.unidade, categoria:p.categoria, fazenda, recomendacao:p.recomendacao||"" }); setModalEdit(p); }}
-                              style={{ padding:"4px 8px", borderRadius:6, fontSize:12, background: LIFT, color: MUTED, border:`1px solid ${LINE2}`, cursor:"pointer" }}>✎</button>
+                              style={{ padding:"6px 10px", borderRadius:6, fontSize:13, background: LIFT, color: MUTED, border:`1px solid ${LINE2}`, cursor:"pointer" }}>✎</button>
                             <button onClick={() => excluirProduto(p.id)}
-                              style={{ padding:"4px 8px", borderRadius:6, fontSize:12, background: LIFT, color: MUTED, border:`1px solid ${LINE2}`, cursor:"pointer" }}>✕</button>
+                              style={{ padding:"6px 10px", borderRadius:6, fontSize:13, background: LIFT, color: MUTED, border:`1px solid ${LINE2}`, cursor:"pointer" }}>✕</button>
                           </div>
                         </div>
                       ))}
@@ -659,19 +659,19 @@ export default function Home() {
                     }}>{entrada ? "↑" : "↓"}</div>
 
                     <div style={{ flex:1, minWidth:0 }}>
-                      <p style={{ fontSize:13, fontWeight:500, color: TEXT, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{m.produto.nome}</p>
+                      <p style={{ fontSize:15, fontWeight:500, color: TEXT, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{m.produto.nome}</p>
                       <div style={{ display:"flex", alignItems:"center", gap:4, marginTop:2, flexWrap:"wrap" }}>
-                        {m.responsavel && <span style={{ fontSize:11, color: BLUE, fontWeight:600 }}>{m.responsavel}</span>}
-                        {m.responsavel && m.observacao && <span style={{ fontSize:11, color: MUTED }}>·</span>}
-                        {m.observacao && <span style={{ fontSize:11, color: MUTED }}>{m.observacao}</span>}
+                        {m.responsavel && <span style={{ fontSize:13, color: BLUE, fontWeight:600 }}>{m.responsavel}</span>}
+                        {m.responsavel && m.observacao && <span style={{ fontSize:13, color: MUTED }}>·</span>}
+                        {m.observacao && <span style={{ fontSize:13, color: MUTED }}>{m.observacao}</span>}
                       </div>
                     </div>
 
                     <div style={{ textAlign:"right", flexShrink:0 }}>
-                      <p style={{ fontSize:13, fontWeight:700, color: entrada ? GREEN : RED, fontFamily:"ui-monospace,monospace" }}>
+                      <p style={{ fontSize:15, fontWeight:700, color: entrada ? GREEN : RED, fontFamily:"ui-monospace,monospace" }}>
                         {entrada ? "+" : "−"}{m.quantidade} {m.produto.unidade}
                       </p>
-                      <p style={{ fontSize:10, color: MUTED, marginTop:2 }}>{fmtDate(m.criadoEm)}</p>
+                      <p style={{ fontSize:12, color: MUTED, marginTop:2 }}>{fmtDate(m.criadoEm)}</p>
                     </div>
                   </div>
                 );
@@ -727,11 +727,11 @@ export default function Home() {
                 }}>
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
-                      <span style={{ fontSize:13, fontWeight:600, color: TEXT }}>{c.produto}</span>
-                      <span style={{ fontSize:12, fontWeight:700, color: GREEN, fontFamily:"ui-monospace,monospace" }}>{fmtQty(c.quantidade)} {c.unidade}</span>
-                      <span style={{ fontSize:10, color: GREEN, background: G_DIM, padding:"1px 7px", borderRadius:99, fontWeight:600 }}>{c.fazenda}</span>
+                      <span style={{ fontSize:15, fontWeight:600, color: TEXT }}>{c.produto}</span>
+                      <span style={{ fontSize:14, fontWeight:700, color: GREEN, fontFamily:"ui-monospace,monospace" }}>{fmtQty(c.quantidade)} {c.unidade}</span>
+                      <span style={{ fontSize:12, color: GREEN, background: G_DIM, padding:"2px 8px", borderRadius:99, fontWeight:600 }}>{c.fazenda}</span>
                     </div>
-                    <p style={{ fontSize:11, color: MUTED, marginTop:4 }}>
+                    <p style={{ fontSize:13, color: MUTED, marginTop:4 }}>
                       {new Date(c.data+"T12:00:00").toLocaleDateString("pt-BR")}
                       {c.destino    && ` · ${c.destino}`}
                       {c.placa      && ` · ${c.placa}`}
@@ -739,7 +739,7 @@ export default function Home() {
                     </p>
                   </div>
                   <button onClick={() => excluirCarga(c.id)} style={{
-                    padding:"4px 8px", borderRadius:6, fontSize:11,
+                    padding:"6px 10px", borderRadius:6, fontSize:13,
                     background: RED_DIM, color: RED, border:"none", cursor:"pointer", flexShrink:0,
                   }}>✕</button>
                 </div>
@@ -797,18 +797,18 @@ export default function Home() {
                   }}>🌧️</div>
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                      <span style={{ fontSize:13, fontWeight:700, color: BLUE, fontFamily:"ui-monospace,monospace" }}>
+                      <span style={{ fontSize:15, fontWeight:700, color: BLUE, fontFamily:"ui-monospace,monospace" }}>
                         {fmtQty(c.mm)} mm
                       </span>
-                      <span style={{ fontSize:10, color: BLUE, background: BLUE_DIM, padding:"1px 7px", borderRadius:99, fontWeight:600 }}>{c.fazenda}</span>
+                      <span style={{ fontSize:12, color: BLUE, background: BLUE_DIM, padding:"2px 8px", borderRadius:99, fontWeight:600 }}>{c.fazenda}</span>
                     </div>
-                    <p style={{ fontSize:11, color: MUTED, marginTop:2 }}>
+                    <p style={{ fontSize:13, color: MUTED, marginTop:2 }}>
                       {new Date(c.data+"T12:00:00").toLocaleDateString("pt-BR")}
                       {c.observacao && ` · ${c.observacao}`}
                     </p>
                   </div>
                   <button onClick={() => excluirChuva(c.id)} style={{
-                    padding:"4px 8px", borderRadius:6, fontSize:11,
+                    padding:"6px 10px", borderRadius:6, fontSize:13,
                     background: RED_DIM, color: RED, border:"none", cursor:"pointer", flexShrink:0,
                   }}>✕</button>
                 </div>
@@ -821,9 +821,9 @@ export default function Home() {
         {aba === "usuarios" && isAdmin && (
           <div>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
-              <p style={{ fontSize:13, fontWeight:600, color: TEXT2 }}>Usuários cadastrados</p>
+              <p style={{ fontSize:15, fontWeight:600, color: TEXT2 }}>Usuários cadastrados</p>
               <a href="/cadastro" target="_blank" style={{
-                padding:"6px 14px", borderRadius:8, fontSize:12, fontWeight:600,
+                padding:"8px 16px", borderRadius:8, fontSize:14, fontWeight:600,
                 background: G_DIM, color: GREEN, border:`1px solid ${LINE3}`, textDecoration:"none",
               }}>+ Novo</a>
             </div>
@@ -843,16 +843,16 @@ export default function Home() {
                     width:34, height:34, borderRadius:8,
                     background: LIFT, border:`1px solid ${LINE2}`,
                     display:"flex", alignItems:"center", justifyContent:"center",
-                    fontSize:12, fontWeight:700, color: TEXT2, flexShrink:0,
+                    fontSize:14, fontWeight:700, color: TEXT2, flexShrink:0,
                   }}>{initials(u.usuario)}</div>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <p style={{ fontSize:13, fontWeight:500, color: TEXT }}>{u.usuario}</p>
-                    <p style={{ fontSize:11, color: MUTED, marginTop:1 }}>
+                    <p style={{ fontSize:15, fontWeight:500, color: TEXT }}>{u.usuario}</p>
+                    <p style={{ fontSize:13, color: MUTED, marginTop:1 }}>
                       {u.role === "admin" ? "Administrador" : "Usuário"} · desde {new Date(u.criado_em).toLocaleDateString("pt-BR")}
                     </p>
                   </div>
                   <button onClick={() => excluirUsuario(u.id)} style={{
-                    padding:"5px 10px", borderRadius:6, fontSize:11, fontWeight:600,
+                    padding:"7px 12px", borderRadius:6, fontSize:13, fontWeight:600,
                     background: RED_DIM, color: RED, border:"none", cursor:"pointer",
                   }}>Excluir</button>
                 </div>
@@ -866,7 +866,7 @@ export default function Home() {
       {/* ── Bottom Navigation ──────────────────────────────── */}
       <nav style={{
         position:"fixed", bottom:0, left:0, right:0, zIndex:20,
-        height:60, background: SURFACE, borderTop:`1px solid ${LINE}`,
+        height:68, background: SURFACE, borderTop:`1px solid ${LINE}`,
         display:"flex",
       }}>
         {navItems.map(item => {
@@ -874,13 +874,13 @@ export default function Home() {
           return (
             <button key={item.id} onClick={() => mudarAba(item.id)} style={{
               flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
-              gap:3, background:"transparent", border:"none", cursor:"pointer",
+              gap:4, background:"transparent", border:"none", cursor:"pointer",
               color: ativo ? GREEN : MUTED,
               borderTop: ativo ? `2px solid ${GREEN}` : "2px solid transparent",
               transition:"all .15s",
             }}>
-              <span style={{ fontSize:15, lineHeight:1 }}>{item.icon}</span>
-              <span style={{ fontSize:10, fontWeight: ativo ? 700 : 400, letterSpacing:"0.02em" }}>{item.label}</span>
+              <span style={{ fontSize:18, lineHeight:1 }}>{item.icon}</span>
+              <span style={{ fontSize:12, fontWeight: ativo ? 700 : 400, letterSpacing:"0.02em" }}>{item.label}</span>
             </button>
           );
         })}
@@ -906,7 +906,7 @@ export default function Home() {
             <Field label="Observação (opcional)">
               <input style={iStyle} placeholder="Ex: chuva forte à tarde..." value={formChuva.observacao} onChange={e => setFormChuva({ ...formChuva, observacao: e.target.value })} />
             </Field>
-            {erro && <p style={{ fontSize:12, color: RED }}>{erro}</p>}
+            {erro && <p style={{ fontSize:14, color: RED }}>{erro}</p>}
             <ModalActions loading={loading} labelOk="Registrar" colorOk={BLUE} bgOk={BLUE_DIM} borderOk={BLUE} onCancel={() => { setModalChuva(false); setErro(""); }} />
           </form>
         </Modal>
@@ -950,7 +950,7 @@ export default function Home() {
             <Field label="Observação (opcional)">
               <input style={iStyle} placeholder="Notas adicionais..." value={formCarga.observacao} onChange={e => setFormCarga({ ...formCarga, observacao: e.target.value })} />
             </Field>
-            {erro && <p style={{ fontSize:12, color: RED }}>{erro}</p>}
+            {erro && <p style={{ fontSize:14, color: RED }}>{erro}</p>}
             <ModalActions loading={loading} labelOk="Registrar carga" colorOk={GREEN} bgOk={G_DIM} borderOk={LINE3} onCancel={() => { setModalCarga(false); setErro(""); }} />
           </form>
         </Modal>
@@ -986,7 +986,7 @@ export default function Home() {
             <Field label="Recomendação de aplicação (opcional)">
               <input style={iStyle} placeholder="Ex: 0,5 L/ha após emergência" value={formProduto.recomendacao} onChange={e => setFormProduto({ ...formProduto, recomendacao: e.target.value })} />
             </Field>
-            {erro && <p style={{ fontSize:12, color: RED }}>{erro}</p>}
+            {erro && <p style={{ fontSize:14, color: RED }}>{erro}</p>}
             <ModalActions loading={loading} labelOk="Cadastrar" colorOk={GREEN} bgOk={G_DIM} borderOk={LINE3} onCancel={() => { setModalNovo(false); setErro(""); }} />
           </form>
         </Modal>
@@ -1019,7 +1019,7 @@ export default function Home() {
             <Field label="Recomendação de aplicação (opcional)">
               <input style={iStyle} placeholder="Ex: 0,5 L/ha após emergência" value={formEdit.recomendacao} onChange={e => setFormEdit({ ...formEdit, recomendacao: e.target.value })} />
             </Field>
-            {erro && <p style={{ fontSize:12, color: RED }}>{erro}</p>}
+            {erro && <p style={{ fontSize:14, color: RED }}>{erro}</p>}
             <ModalActions loading={loading} labelOk="Salvar alterações" colorOk={GREEN} bgOk={G_DIM} borderOk={LINE3} onCancel={() => { setModalEdit(null); setErro(""); }} />
           </form>
         </Modal>
@@ -1057,7 +1057,7 @@ export default function Home() {
             <Field label="Observação (opcional)">
               <input style={iStyle} placeholder="Ex: Compra fornecedor X..." value={formMov.observacao} onChange={e => setFormMov({ ...formMov, observacao: e.target.value })} />
             </Field>
-            {erro && <p style={{ fontSize:12, color: RED }}>{erro}</p>}
+            {erro && <p style={{ fontSize:14, color: RED }}>{erro}</p>}
             <ModalActions
               loading={loading}
               labelOk={formMov.tipo === "ENTRADA" ? "Registrar entrada" : "Registrar saída"}
@@ -1083,7 +1083,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
         boxShadow:"0 24px 64px rgba(0,0,0,0.6)",
       }}>
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
-          <h2 style={{ fontSize:16, fontWeight:700, color: TEXT, margin:0 }}>{title}</h2>
+          <h2 style={{ fontSize:18, fontWeight:700, color: TEXT, margin:0 }}>{title}</h2>
           <button onClick={onClose} style={{ width:28, height:28, borderRadius:6, background: LIFT, border:"none", color: MUTED, fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
         </div>
         {children}
@@ -1095,7 +1095,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
-      <label style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", letterSpacing:"0.07em", color: MUTED }}>{label}</label>
+      <label style={{ fontSize:13, fontWeight:600, textTransform:"uppercase", letterSpacing:"0.07em", color: MUTED }}>{label}</label>
       {children}
     </div>
   );
@@ -1109,7 +1109,7 @@ function FarmChips({ fazendas, ativa, onSelect, showBadge = false, allOption = f
   allOption?: boolean;
 }) {
   const chip = (isAtiva: boolean) => ({
-    padding:"6px 14px", borderRadius:99, fontSize:12, fontWeight:600,
+    padding:"8px 16px", borderRadius:99, fontSize:14, fontWeight:600,
     whiteSpace:"nowrap" as const, cursor:"pointer", flexShrink:0,
     background: isAtiva ? G_DIM : "transparent",
     color: isAtiva ? GREEN : MUTED,
@@ -1141,11 +1141,11 @@ function ModalActions({ loading, labelOk, colorOk, bgOk, borderOk, onCancel }: {
   return (
     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, paddingTop:4 }}>
       <button type="button" onClick={onCancel} style={{
-        padding:"11px", borderRadius:10, fontSize:13, fontWeight:500,
+        padding:"13px", borderRadius:10, fontSize:15, fontWeight:500,
         background:"transparent", border:`1px solid ${LINE2}`, color: MUTED, cursor:"pointer",
       }}>Cancelar</button>
       <button type="submit" disabled={loading} style={{
-        padding:"11px", borderRadius:10, fontSize:13, fontWeight:600,
+        padding:"13px", borderRadius:10, fontSize:15, fontWeight:600,
         background: bgOk, color: colorOk, border:`1px solid ${borderOk}`,
         cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1,
       }}>{loading ? "Salvando..." : labelOk}</button>
