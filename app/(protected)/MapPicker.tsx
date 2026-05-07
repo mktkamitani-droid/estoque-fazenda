@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
-const BG = "#0F1A0F", TEXT = "#F0FFF0", RED_DIM = "#3C0A0A", RED = "#F87171", GREEN = "#4ADE80", G_DIM = "#081F10", MUTED = "#527A5C";
+const BG = "#0F1A0F", TEXT = "#F0FFF0", RED_DIM = "#3C0A0A", RED = "#F87171";
+const GREEN = "#4ADE80", G_DIM = "#081F10", MUTED = "#527A5C", LINE = "#1F2F1F";
 
 export default function MapPicker({ nome, initialLat, initialLng, onSelect, onClose }: {
   nome: string;
@@ -10,10 +11,12 @@ export default function MapPicker({ nome, initialLat, initialLng, onSelect, onCl
   onSelect: (lat: number, lng: number) => void;
   onClose: () => void;
 }) {
-  const mapRef       = useRef<HTMLDivElement>(null);
-  const markerRef    = useRef<any>(null);
-  const mapInstRef   = useRef<any>(null);
-  const selectedRef  = useRef<{ lat: number; lng: number } | null>(null);
+  const mapRef      = useRef<HTMLDivElement>(null);
+  const markerRef   = useRef<any>(null);
+  const mapInstRef  = useRef<any>(null);
+  const [selected, setSelected] = useState<{ lat: number; lng: number } | null>(
+    initialLat != null && initialLng != null ? { lat: initialLat, lng: initialLng } : null
+  );
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -34,7 +37,7 @@ export default function MapPicker({ nome, initialLat, initialLng, onSelect, onCl
         attribution: "© OpenStreetMap",
       }).addTo(map);
 
-      if (initialLat && initialLng) {
+      if (initialLat != null && initialLng != null) {
         markerRef.current = (L as any).marker([lat, lng]).addTo(map);
       }
 
@@ -47,9 +50,7 @@ export default function MapPicker({ nome, initialLat, initialLng, onSelect, onCl
         } else {
           markerRef.current = (L as any).marker([roundLat, roundLng]).addTo(map);
         }
-        selectedRef.current = { lat: roundLat, lng: roundLng };
-        const btn = document.getElementById("map-confirm-btn");
-        if (btn) { btn.removeAttribute("disabled"); btn.style.opacity = "1"; }
+        setSelected({ lat: roundLat, lng: roundLng });
       });
     });
 
@@ -57,24 +58,29 @@ export default function MapPicker({ nome, initialLat, initialLng, onSelect, onCl
   }, []);
 
   function confirmar() {
-    if (selectedRef.current) {
-      onSelect(selectedRef.current.lat, selectedRef.current.lng);
+    if (selected) {
+      onSelect(selected.lat, selected.lng);
       onClose();
     }
   }
 
   return (
     <div style={{ position:"fixed", inset:0, zIndex:70, background:"rgba(0,0,0,0.95)", display:"flex", flexDirection:"column" }}>
-      <div style={{ padding:"12px 16px", display:"flex", justifyContent:"space-between", alignItems:"center", background: BG, borderBottom:"1px solid #1F2F1F", gap:12, flexShrink:0 }}>
+      <div style={{ padding:"12px 16px", display:"flex", justifyContent:"space-between", alignItems:"center", background: BG, borderBottom:`1px solid ${LINE}`, gap:12, flexShrink:0 }}>
         <div>
-          <p style={{ color: TEXT, fontSize:14, fontWeight:700 }}>{nome}</p>
-          <p style={{ color: MUTED, fontSize:12, marginTop:2 }}>Clique no mapa para marcar a localização</p>
+          <p style={{ color: TEXT, fontSize:14, fontWeight:700, margin:0 }}>{nome}</p>
+          <p style={{ color: MUTED, fontSize:12, marginTop:4, margin:0 }}>
+            {selected ? "Toque em outro ponto para mover o marcador" : "Toque no mapa para marcar a localização"}
+          </p>
         </div>
-        <div style={{ display:"flex", gap:8 }}>
-          <button id="map-confirm-btn" onClick={confirmar} disabled style={{
+        <div style={{ display:"flex", gap:8, flexShrink:0 }}>
+          <button onClick={confirmar} disabled={!selected} style={{
             padding:"8px 18px", borderRadius:8, fontSize:14, fontWeight:700,
-            background: G_DIM, color: GREEN, border:`1px solid #3C6244`,
-            cursor:"pointer", opacity:0.4,
+            background: selected ? "#155228" : G_DIM,
+            color: selected ? GREEN : MUTED,
+            border:`1px solid ${selected ? "#3C6244" : LINE}`,
+            cursor: selected ? "pointer" : "not-allowed",
+            opacity: selected ? 1 : 0.5,
           }}>Confirmar</button>
           <button onClick={onClose} style={{
             padding:"8px 14px", borderRadius:8, fontSize:14, fontWeight:600,
@@ -82,6 +88,13 @@ export default function MapPicker({ nome, initialLat, initialLng, onSelect, onCl
           }}>Fechar</button>
         </div>
       </div>
+      {selected && (
+        <div style={{ padding:"6px 16px", background: BG, borderBottom:`1px solid ${LINE}`, flexShrink:0 }}>
+          <p style={{ color: GREEN, fontSize:12, margin:0 }}>
+            📍 {selected.lat.toFixed(6)}, {selected.lng.toFixed(6)}
+          </p>
+        </div>
+      )}
       <div ref={mapRef} style={{ flex:1 }} />
     </div>
   );
