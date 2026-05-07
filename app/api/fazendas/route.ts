@@ -42,12 +42,15 @@ export async function POST(req: NextRequest) {
     if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     if (session.role === "demo") return NextResponse.json({ error: "Acesso somente leitura" }, { status: 403 });
 
-    const { nome } = await req.json();
+    const { nome, latitude, longitude } = await req.json();
     if (!nome?.trim()) return NextResponse.json({ error: "Nome obrigatório" }, { status: 400 });
 
     const owner = session.role === "admin" ? "admin" : session.usuario;
+    const lat = typeof latitude === "number" && !isNaN(latitude) ? latitude : null;
+    const lng = typeof longitude === "number" && !isNaN(longitude) ? longitude : null;
     const [fazenda] = await sql`
-      INSERT INTO fazendas (nome, owner) VALUES (${nome.trim()}, ${owner})
+      INSERT INTO fazendas (nome, owner, latitude, longitude)
+      VALUES (${nome.trim()}, ${owner}, ${lat}, ${lng})
       ON CONFLICT (nome) DO NOTHING
       RETURNING *
     `;

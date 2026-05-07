@@ -179,8 +179,9 @@ export default function Home() {
   const [formEdit,    setFormEdit]    = useState({ nome:"", unidade:"kg", categoria:"Geral", fazenda:"", recomendacao:"" });
   const [formCarga,   setFormCarga]   = useState(novaCargaDefault);
   const [formChuva,   setFormChuva]   = useState(novaChuvaDefault);
-  const [novaFazendaNome, setNovaFazendaNome] = useState("");
-  const [novaFazendaErro, setNovaFazendaErro] = useState("");
+  const [novaFazendaNome,   setNovaFazendaNome]   = useState("");
+  const [novaFazendaCoords, setNovaFazendaCoords] = useState("");
+  const [novaFazendaErro,   setNovaFazendaErro]   = useState("");
 
   const router = useRouter();
 
@@ -371,10 +372,13 @@ export default function Home() {
     setNovaFazendaErro("");
     const nome = novaFazendaNome.trim();
     if (!nome) return;
-    const r = await fetch("/api/fazendas", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ nome }) });
+    const coords = parseGeoCoords(novaFazendaCoords);
+    const body: any = { nome };
+    if (coords) { body.latitude = coords.lat; body.longitude = coords.lng; }
+    const r = await fetch("/api/fazendas", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body) });
     const d = await r.json();
     if (d.error) { setNovaFazendaErro(d.error); return; }
-    setNovaFazendaNome("");
+    setNovaFazendaNome(""); setNovaFazendaCoords("");
     const rf = await fetch("/api/fazendas");
     const lista: Fazenda[] = await rf.json();
     setFazendas(lista);
@@ -1144,15 +1148,30 @@ export default function Home() {
             </p>
 
             {/* Create farm form */}
-            <form onSubmit={criarFazenda} style={{ display:"flex", gap:8, marginBottom:16 }}>
+            <form onSubmit={criarFazenda} style={{ background: SURFACE, border:`1px solid ${LINE2}`, borderRadius:12, padding:"14px", marginBottom:16, display:"flex", flexDirection:"column", gap:8 }}>
               <input
-                style={{ ...iStyle, flex:1, padding:"10px 14px", borderRadius:10, fontSize:14 }}
-                placeholder="Nome da nova fazenda"
+                style={{ ...iStyle, width:"100%", padding:"10px 14px", borderRadius:10, fontSize:14 }}
+                placeholder="Nome da fazenda"
                 value={novaFazendaNome}
                 onChange={e => setNovaFazendaNome(e.target.value)}
+                required
               />
-              <button type="submit" style={{ padding:"10px 18px", borderRadius:10, fontSize:14, fontWeight:700, background: G_DIM, color: GREEN, border:`1px solid ${LINE3}`, cursor:"pointer" }}>
-                + Criar
+              <div style={{ display:"flex", gap:6 }}>
+                <input
+                  style={{ ...iStyle, flex:1, padding:"9px 12px", borderRadius:8, fontSize:13 }}
+                  placeholder="Localização — cole do Google Maps ou Google Earth (opcional)"
+                  value={novaFazendaCoords}
+                  onChange={e => setNovaFazendaCoords(e.target.value)}
+                />
+              </div>
+              {novaFazendaCoords && (() => {
+                const p = parseGeoCoords(novaFazendaCoords);
+                return p
+                  ? <p style={{ fontSize:11, color: GREEN, margin:0 }}>✓ Lat {p.lat.toFixed(6)} · Lng {p.lng.toFixed(6)}</p>
+                  : <p style={{ fontSize:11, color: RED, margin:0 }}>Formato não reconhecido</p>;
+              })()}
+              <button type="submit" style={{ padding:"10px 18px", borderRadius:10, fontSize:14, fontWeight:700, background: G_DIM, color: GREEN, border:`1px solid ${LINE3}`, cursor:"pointer", alignSelf:"flex-end" }}>
+                + Criar fazenda
               </button>
             </form>
             {novaFazendaErro && <p style={{ fontSize:13, color: RED, marginBottom:12 }}>{novaFazendaErro}</p>}
@@ -1361,20 +1380,22 @@ export default function Home() {
       <nav style={{
         position:"fixed", bottom:0, left:0, right:0, zIndex:20,
         height:56, background: SURFACE, borderTop:`1px solid ${LINE}`,
-        display:"flex", gap:6, padding:"0 8px",
+        display:"flex", gap:2, padding:"0 4px",
+        overflowX:"auto",
       }}>
         {navItems.map(item => {
           const ativo = aba === item.id;
           return (
             <button key={item.id} onClick={() => mudarAba(item.id)} style={{
-              flex:1, height:"100%", display:"flex", alignItems:"center", justifyContent:"center",
+              flex:1, minWidth:0, height:"100%", display:"flex", alignItems:"center", justifyContent:"center",
               background: ativo ? G_DIM : "transparent",
               border:"none", borderTop: ativo ? `2px solid ${GREEN}` : "2px solid transparent",
               borderRadius: ativo ? "0 0 6px 6px" : 0,
               cursor:"pointer", transition:"all .15s",
               color: ativo ? GREEN : MUTED,
-              fontSize:13, fontWeight: ativo ? 700 : 500,
-              letterSpacing:"0.02em",
+              fontSize:12, fontWeight: ativo ? 700 : 500,
+              whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis",
+              padding:"0 6px",
             }}>
               {item.label}
             </button>
