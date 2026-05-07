@@ -494,7 +494,7 @@ export default function Home() {
             background:`linear-gradient(135deg, ${G_MID}, ${GREEN})`,
             display:"flex", alignItems:"center", justifyContent:"center",
             fontWeight:800, fontSize:12, color:"#050A05", border:"none", cursor:"pointer",
-          }}>KA</button>
+          }}>FH</button>
           <span style={{ fontSize:16, fontWeight:600, color: TEXT }}>{ABA_LABEL[aba]}</span>
         </div>
 
