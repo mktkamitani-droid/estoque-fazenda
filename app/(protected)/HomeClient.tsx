@@ -161,6 +161,8 @@ export default function Home() {
   const [coordFazenda, setCoordFazenda] = useState<Record<number, { lat: string; lng: string }>>({});
   const [pasteCoords,  setPasteCoords]  = useState<Record<number, string>>({});
   const [coordOpen,    setCoordOpen]    = useState<Record<number, boolean>>({});
+  const [coordSaving,  setCoordSaving]  = useState<Record<number, boolean>>({});
+  const [coordMsg,     setCoordMsg]     = useState<Record<number, string>>({});
   const [mapFazenda,   setMapFazenda]   = useState<Fazenda | null>(null);
   const [chuvaVista,   setChuvaVista]   = useState<"acumulado" | "historico">("acumulado");
   const [anoSel,       setAnoSel]       = useState(new Date().getFullYear());
@@ -413,14 +415,26 @@ export default function Home() {
     if (!coords) return;
     const lat = parseFloat(coords.lat.replace(",", "."));
     const lng = parseFloat(coords.lng.replace(",", "."));
-    if (isNaN(lat) || isNaN(lng)) return;
-    await fetch(`/api/fazendas/${faz.id}`, {
+    if (isNaN(lat) || isNaN(lng)) {
+      setCoordMsg(prev => ({ ...prev, [faz.id]: "Coordenadas inválidas" }));
+      return;
+    }
+    setCoordSaving(prev => ({ ...prev, [faz.id]: true }));
+    setCoordMsg(prev => ({ ...prev, [faz.id]: "" }));
+    const r = await fetch(`/api/fazendas/${faz.id}`, {
       method:"PATCH", headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ latitude: lat, longitude: lng }),
     });
-    const [rme, rf] = await Promise.all([fetch("/api/auth/me"), fetch("/api/fazendas")]);
+    setCoordSaving(prev => ({ ...prev, [faz.id]: false }));
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      setCoordMsg(prev => ({ ...prev, [faz.id]: d.error || "Erro ao salvar" }));
+      return;
+    }
+    const rf = await fetch("/api/fazendas");
     setFazendas(await rf.json());
     setCoordOpen(prev => ({ ...prev, [faz.id]: false }));
+    setPasteCoords(prev => ({ ...prev, [faz.id]: "" }));
   }
 
   function handlePasteCoords(fazId: number, text: string) {
@@ -1208,23 +1222,39 @@ export default function Home() {
                       <button onClick={() => excluirFazenda(f.nome)} style={{ padding:"7px 12px", borderRadius:6, fontSize:13, fontWeight:600, background: RED_DIM, color: RED, border:"none", cursor:"pointer" }}>✕</button>
                     </div>
                     {open && (
-                      <div style={{ padding:"0 14px 14px", borderTop:`1px solid ${LINE}`, paddingTop:12 }}>
-                        <p style={{ fontSize:11, color: MUTED, marginBottom:6 }}>Cole as coordenadas do Google Maps ou Google Earth</p>
+                      <div style={{ padding:"0 14px 14px", borderTop:`1px solid ${LINE}`, paddingTop:12, display:"flex", flexDirection:"column", gap:8 }}>
+                        <p style={{ fontSize:11, color: MUTED, margin:0 }}>Cole do Google Maps ou Google Earth</p>
+                        <input
+                          style={{ ...iStyle, fontSize:13, padding:"8px 12px", borderRadius:8 }}
+                          placeholder="-15.7802, -47.9291"
+                          value={paste}
+                          onChange={e => handlePasteCoords(f.id, e.target.value)}
+                        />
+                        {paste && !parsed && (
+                          <p style={{ fontSize:11, color: MUTED, margin:0 }}>Formato não reconhecido — preencha manualmente abaixo</p>
+                        )}
                         <div style={{ display:"flex", gap:6 }}>
                           <input
-                            style={{ ...iStyle, flex:1, fontSize:13, padding:"8px 12px", borderRadius:8 }}
-                            placeholder="-15.7802, -47.9291  ou  15°46'48&quot;S 47°55'45&quot;O"
-                            value={paste}
-                            onChange={e => handlePasteCoords(f.id, e.target.value)}
+                            style={{ ...iStyle, flex:1, fontSize:13, padding:"8px 10px", borderRadius:8 }}
+                            placeholder="Latitude  ex: -15.7802"
+                            value={coords.lat}
+                            onChange={e => setCoordFazenda(prev => ({ ...prev, [f.id]: { ...coords, lat: e.target.value } }))}
                           />
-                          <button onClick={() => setMapFazenda(f)} style={{ padding:"8px 12px", borderRadius:8, fontSize:13, fontWeight:600, background: LIFT, color: TEXT2, border:`1px solid ${LINE2}`, cursor:"pointer" }}>🗺</button>
-                          <button onClick={() => salvarCoordenadas(f)} disabled={!coords.lat || !coords.lng} style={{ padding:"8px 14px", borderRadius:8, fontSize:13, fontWeight:700, background: G_DIM, color: GREEN, border:`1px solid ${LINE3}`, cursor: (!coords.lat || !coords.lng) ? "not-allowed" : "pointer", opacity: (!coords.lat || !coords.lng) ? 0.5 : 1 }}>Salvar</button>
+                          <input
+                            style={{ ...iStyle, flex:1, fontSize:13, padding:"8px 10px", borderRadius:8 }}
+                            placeholder="Longitude  ex: -47.9291"
+                            value={coords.lng}
+                            onChange={e => setCoordFazenda(prev => ({ ...prev, [f.id]: { ...coords, lng: e.target.value } }))}
+                          />
                         </div>
-                        {parsed && (
-                          <p style={{ fontSize:11, color: GREEN, marginTop:6 }}>✓ Lat {parsed.lat.toFixed(6)} · Lng {parsed.lng.toFixed(6)}</p>
-                        )}
-                        {paste && !parsed && (
-                          <p style={{ fontSize:11, color: RED, marginTop:6 }}>Formato não reconhecido</p>
+                        <div style={{ display:"flex", gap:6, alignItems:"center" }}>
+                          <button onClick={() => setMapFazenda(f)} style={{ padding:"8px 12px", borderRadius:8, fontSize:13, fontWeight:600, background: LIFT, color: TEXT2, border:`1px solid ${LINE2}`, cursor:"pointer" }}>🗺 Mapa</button>
+                          <button onClick={() => salvarCoordenadas(f)} disabled={coordSaving[f.id] || !coords.lat || !coords.lng} style={{ flex:1, padding:"8px 14px", borderRadius:8, fontSize:13, fontWeight:700, background: G_DIM, color: GREEN, border:`1px solid ${LINE3}`, cursor: "pointer", opacity: (!coords.lat || !coords.lng) ? 0.5 : 1 }}>
+                            {coordSaving[f.id] ? "Salvando..." : "Salvar localização"}
+                          </button>
+                        </div>
+                        {coordMsg[f.id] && (
+                          <p style={{ fontSize:11, color: RED, margin:0 }}>{coordMsg[f.id]}</p>
                         )}
                       </div>
                     )}
