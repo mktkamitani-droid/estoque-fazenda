@@ -61,9 +61,9 @@ export default function Login() {
             fontSize: 32, boxShadow: `0 0 32px ${GREEN}33`,
           }}>🌾</div>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: TEXT, letterSpacing: "-0.5px", margin: 0 }}>
-            Kamitani Agro
+            FarmHub
           </h1>
-          <p style={{ fontSize: "0.75rem", color: MUTED, marginTop: 4 }}>Controle de estoque</p>
+          <p style={{ fontSize: "0.75rem", color: MUTED, marginTop: 4 }}>Gestão de fazendas</p>
         </div>
 
         <div style={{ background: SURFACE, border: `1px solid ${LINE2}`, borderRadius: 16, padding: "1.5rem" }}>
@@ -121,7 +121,7 @@ export default function Login() {
         </div>
 
         <p style={{ textAlign: "center", fontSize: "0.7rem", color: MUTED, marginTop: 16, opacity: 0.5 }}>
-          &copy; {new Date().getFullYear()} Kamitani Agro
+          &copy; {new Date().getFullYear()} FarmHub
         </p>
       </div>
     </div>

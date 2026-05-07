@@ -30,6 +30,12 @@ export async function POST(req: NextRequest) {
   // Usuários do banco
   try {
     await initDb();
+  } catch (e) {
+    console.error("[login] initDb error:", e);
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
+  }
+
+  try {
     const [user] = await sql`
       SELECT id, usuario, senha_hash, role FROM usuarios WHERE usuario = ${usuario?.trim().toLowerCase()}
     `;
@@ -45,8 +51,9 @@ export async function POST(req: NextRequest) {
       });
       return res;
     }
-  } catch {
-    // banco indisponível, cai no 401
+  } catch (e) {
+    console.error("[login] query error:", e);
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 
   return NextResponse.json({ error: "Usuário ou senha incorretos" }, { status: 401 });

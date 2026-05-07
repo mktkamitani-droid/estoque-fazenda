@@ -1,4 +1,10 @@
 import { neon, NeonQueryFunction } from "@neondatabase/serverless";
+import { createHash, randomBytes } from "crypto";
+
+function hashLocal(senha: string) {
+  const salt = randomBytes(16).toString("hex");
+  return `${salt}:${createHash("sha256").update(salt + senha).digest("hex")}`;
+}
 
 let _sql: NeonQueryFunction<false, false> | null = null;
 
@@ -59,6 +65,9 @@ export async function initDb() {
       criado_em TIMESTAMP NOT NULL DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE fazendas ADD COLUMN IF NOT EXISTS latitude REAL`;
+  await sql`ALTER TABLE fazendas ADD COLUMN IF NOT EXISTS longitude REAL`;
+  await sql`ALTER TABLE fazendas ADD COLUMN IF NOT EXISTS owner TEXT NOT NULL DEFAULT 'admin'`;
   await sql`
     INSERT INTO fazendas (nome) VALUES ('Dom'), ('Tinguara'), ('Santa Rosa'), ('Santa Rita')
     ON CONFLICT (nome) DO NOTHING
@@ -84,6 +93,38 @@ export async function initDb() {
       criado_em TIMESTAMP NOT NULL DEFAULT NOW()
     )
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS logs (
+      id SERIAL PRIMARY KEY,
+      usuario TEXT NOT NULL DEFAULT '',
+      acao TEXT NOT NULL,
+      detalhes TEXT NOT NULL DEFAULT '',
+      fazenda TEXT NOT NULL DEFAULT '',
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS usuario_fazendas (
+      usuario TEXT NOT NULL,
+      fazenda TEXT NOT NULL,
+      PRIMARY KEY (usuario, fazenda)
+    )
+  `;
+  try {
+    const demoSalt = "farmhub_demo_bootstrap";
+    const demoHash = `${demoSalt}:${createHash("sha256").update(demoSalt + "teste123").digest("hex")}`;
+    await sql`INSERT INTO usuarios (usuario, senha_hash, role) VALUES ('teste', ${demoHash}, 'demo') ON CONFLICT (usuario) DO UPDATE SET senha_hash = ${demoHash}, role = 'demo'`;
+    const adminSalt = "farmhub_admin_bootstrap";
+    const adminHash = `${adminSalt}:${createHash("sha256").update(adminSalt + "admin").digest("hex")}`;
+    await sql`INSERT INTO usuarios (usuario, senha_hash, role) VALUES ('admin', ${adminHash}, 'admin') ON CONFLICT (usuario) DO UPDATE SET senha_hash = ${adminHash}, role = 'admin'`;
+  } catch (e) {
+    console.error("[initDb] bootstrap error:", e);
+  }
+}
+
+export async function registrarLog(usuario: string, acao: string, detalhes: string, fazenda = "") {
+  const sql = getSql();
+  await sql`INSERT INTO logs (usuario, acao, detalhes, fazenda) VALUES (${usuario}, ${acao}, ${detalhes}, ${fazenda})`;
 }
 
 export default function sql(
